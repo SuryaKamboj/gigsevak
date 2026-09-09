@@ -5,13 +5,13 @@ import { getAuth } from 'firebase/auth';
  * Firebase Configuration for GigSevak / GharSaathi
  */
 const firebaseConfig = {
-  apiKey: import.meta.env.VITE_FIREBASE_API_KEY || 'AIzaSyARFBf7MiFuzCSe_88izp9LwGbvNZgmXUQ',
-  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || 'gigseva-862fb.firebaseapp.com',
-  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID || 'gigseva-862fb',
-  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET || 'gigseva-862fb.firebasestorage.app',
-  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID || '544287126361',
-  appId: import.meta.env.VITE_FIREBASE_APP_ID || '1:544287126361:web:8e9106187fa9f2ccf89248',
-  measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID || 'G-VJ5N8HS6M7'
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY || '',
+  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || '',
+  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID || '',
+  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET || '',
+  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID || '',
+  appId: import.meta.env.VITE_FIREBASE_APP_ID || '',
+  measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID || ''
 };
 
 // Initialize Firebase App
