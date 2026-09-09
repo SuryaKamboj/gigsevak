@@ -1,24 +1,37 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { AuthLayout } from '../../components/auth/AuthLayout';
 import { PhoneInput } from '../../components/auth/PhoneInput';
 import { AuthButton } from '../../components/auth/AuthButton';
-import { authService } from '../../services/authService';
+import { SpeakerButton } from '../../components/common/SpeakerButton';
+import { sendOtpSms } from '../../services/firebaseAuth';
 import { onboardingService } from '../../services/onboardingService';
 
 export const WorkerSignup: React.FC = () => {
   const navigate = useNavigate();
+  const { t, i18n } = useTranslation();
+  const activeLangCode = i18n.language || localStorage.getItem('workerLanguage') || 'en';
+
   const [phoneNumber, setPhoneNumber] = useState('');
   const [error, setError] = useState<string | undefined>();
   const [isLoading, setIsLoading] = useState(false);
 
+  const headingText = t('auth.mobileNumber.title', { lng: activeLangCode }) || 'Enter your mobile number';
+  const subtitleText = t('auth.mobileNumber.description', { lng: activeLangCode }) || 'We will send an OTP to verify your mobile number.';
+  const sendOtpText = t('auth.mobileNumber.sendOtp', { lng: activeLangCode }) || 'Send OTP';
+  const alreadyHaveAccountText = t('auth.alreadyHaveAccount', { lng: activeLangCode }) || 'Already have an account?';
+  const loginText = t('auth.login', { lng: activeLangCode }) || 'Log in';
+  const fullText = `${headingText}. ${subtitleText}`;
+
   const validate = () => {
-    if (!phoneNumber.trim()) {
-      setError('Please enter your mobile number');
+    const digitsOnly = phoneNumber.replace(/\D/g, '');
+    if (!digitsOnly) {
+      setError(t('auth.mobileNumber.invalidNumber', { lng: activeLangCode }) || 'Please enter your mobile number');
       return false;
     }
-    if (!/^[6-9]\d{9}$/.test(phoneNumber)) {
-      setError('Enter a valid 10-digit mobile number');
+    if (digitsOnly.length !== 10 || !/^[6-9]/.test(digitsOnly)) {
+      setError(t('auth.mobileNumber.invalidNumber', { lng: activeLangCode }) || 'Enter a valid 10-digit mobile number');
       return false;
     }
     setError(undefined);
@@ -30,21 +43,27 @@ export const WorkerSignup: React.FC = () => {
     if (!validate()) return;
 
     setIsLoading(true);
+    setError(undefined);
+
     try {
-      const response = await authService.requestOtp(phoneNumber);
-      if (response.success) {
-        onboardingService.updateState({ mobileNumber: phoneNumber, isMobileCompleted: true });
-        navigate('/worker/verify', {
-          state: {
-            phoneNumber,
-            mode: 'signup',
-          },
-        });
-      } else {
-        setError(response.message);
-      }
-    } catch {
-      setError('Failed to send OTP. Please try again.');
+      const cleanPhone = phoneNumber.replace(/\D/g, '');
+      const formattedNumber = `+91${cleanPhone}`;
+      const response = await sendOtpSms(formattedNumber);
+
+      localStorage.setItem('user_mobile_number', formattedNumber);
+      onboardingService.updateState({ mobileNumber: formattedNumber, isMobileCompleted: true });
+
+      navigate('/worker/verify', {
+        state: {
+          phoneNumber: formattedNumber,
+          mode: 'signup',
+          isSimulated: response.isSimulated,
+          simulatedOtp: response.simulatedOtp
+        },
+      });
+    } catch (err: any) {
+      console.error('Send OTP error:', err);
+      setError(err?.message || 'Failed to send OTP. Please check your number and try again.');
     } finally {
       setIsLoading(false);
     }
@@ -62,9 +81,20 @@ export const WorkerSignup: React.FC = () => {
       <div className="space-y-6">
         {/* Header Section */}
         <div className="text-center space-y-1.5">
-          <h1 className="text-2xl sm:text-[26px] font-bold tracking-tight text-[#222222]">
-            Enter your mobile number
-          </h1>
+          <div className="flex items-center justify-center gap-2">
+            <h1 className="text-2xl sm:text-[26px] font-bold tracking-tight text-[#17212B]">
+              {headingText}
+            </h1>
+            <SpeakerButton
+              text={fullText}
+              langCode={activeLangCode}
+              size="sm"
+              label="Listen instructions"
+            />
+          </div>
+          <p className="text-xs sm:text-sm text-[#66737D] max-w-[320px] mx-auto">
+            {subtitleText}
+          </p>
         </div>
 
         {/* Signup Form */}
@@ -82,20 +112,20 @@ export const WorkerSignup: React.FC = () => {
 
           <div className="pt-2">
             <AuthButton type="submit" isLoading={isLoading}>
-              Send OTP
+              {sendOtpText}
             </AuthButton>
           </div>
         </form>
 
         {/* Switch to Login */}
         <div className="text-center pt-2 border-t border-slate-100">
-          <p className="text-sm text-[#6B6B6B]">
-            Already have an account?{' '}
+          <p className="text-sm text-[#66737D]">
+            {alreadyHaveAccountText}{' '}
             <Link
               to="/worker/login"
-              className="font-semibold text-[#A66666] hover:underline underline-offset-4 focus:outline-none focus:ring-1 focus:ring-[#A66666] rounded"
+              className="font-semibold text-[#1C516C] hover:underline underline-offset-4 focus:outline-none focus:ring-1 focus:ring-[#1C516C] rounded"
             >
-              Log in
+              {loginText}
             </Link>
           </p>
         </div>

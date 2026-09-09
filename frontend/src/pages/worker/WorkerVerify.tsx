@@ -1,29 +1,35 @@
 import React, { useState } from 'react';
 import { useLocation, useNavigate, Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { ArrowLeft, CheckCircle2 } from 'lucide-react';
 import { AuthLayout } from '../../components/auth/AuthLayout';
 import { OTPInput } from '../../components/auth/OTPInput';
 import { OTPTimer } from '../../components/auth/OTPTimer';
 import { AuthButton } from '../../components/auth/AuthButton';
-import { authService } from '../../services/authService';
+import { SpeakerButton } from '../../components/common/SpeakerButton';
+import { verifyOtpCode, sendOtpSms } from '../../services/firebaseAuth';
 import { onboardingService } from '../../services/onboardingService';
 
 interface LocationState {
   phoneNumber?: string;
   mode?: 'signup' | 'login';
+  isSimulated?: boolean;
+  simulatedOtp?: string;
 }
 
 export const WorkerVerify: React.FC = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  const state = (location.state as LocationState) || {};
+  const { t, i18n } = useTranslation();
+  const activeLangCode = i18n.language || localStorage.getItem('workerLanguage') || 'en';
 
-  const rawPhone = state.phoneNumber || '9876543210';
+  const state = (location.state as LocationState) || {};
+  const rawPhone = state.phoneNumber || '';
   const mode = state.mode || 'signup';
 
   // Masked phone format: +91 ••••••1234
-  const lastFourDigits = rawPhone.replace(/\D/g, '').slice(-4) || '1234';
-  const maskedPhone = `+91 ••••••${lastFourDigits}`;
+  const lastFourDigits = rawPhone.replace(/\D/g, '').slice(-4) || '••••';
+  const maskedPhone = rawPhone ? `+91 ••••••${lastFourDigits}` : '';
 
   const [otp, setOtp] = useState('');
   const [error, setError] = useState<string | undefined>();
@@ -31,12 +37,20 @@ export const WorkerVerify: React.FC = () => {
   const [successMessage, setSuccessMessage] = useState<string | undefined>();
   const [isLoading, setIsLoading] = useState(false);
 
-  const handleVerify = (e?: React.FormEvent) => {
+  const headingText = t('auth.otp.title', { lng: activeLangCode }) || 'Verify your mobile number';
+  const enterOtpText = t('auth.otp.description', { lng: activeLangCode }) || 'Enter the 6-digit OTP sent to your mobile number';
+  const changeNumberText = t('auth.otp.changeNumber', { lng: activeLangCode }) || 'Change mobile number';
+  const verifyOtpText = t('auth.otp.verifyOtp', { lng: activeLangCode }) || 'Verify OTP';
+  const didntReceiveText = t('auth.otp.didntReceive', { lng: activeLangCode }) || "Didn't receive the OTP?";
+  const resendOtpText = t('auth.otp.resendOtp', { lng: activeLangCode }) || 'Resend OTP';
+  const fullText = `${headingText}. ${enterOtpText}`;
+
+  const handleVerify = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
     if (isLoading || successMessage) return;
 
     if (otp.length < 6) {
-      setError('Please enter the 6-digit OTP');
+      setError(t('auth.otp.invalidOtp', { lng: activeLangCode }) || 'Please enter the 6-digit OTP');
       return;
     }
 
@@ -44,32 +58,50 @@ export const WorkerVerify: React.FC = () => {
     setError(undefined);
     setResendNotification(undefined);
 
-    // Frontend prototype simulation
-    setTimeout(() => {
-      setIsLoading(false);
-      setSuccessMessage('Mobile number verified.');
-      onboardingService.updateState({ isMobileCompleted: true });
-      
-      // Navigate to placeholder Worker Dashboard
+    try {
+      await verifyOtpCode(otp);
+
+      setSuccessMessage(t('auth.otp.otpVerifiedSuccess', { lng: activeLangCode }) || 'Mobile number verified successfully.');
+      onboardingService.updateState({ mobileNumber: rawPhone, isMobileCompleted: true });
+
+      // Save user session
+      const userSession = {
+        phoneNumber: rawPhone,
+        name: 'GigSevak',
+        isVerified: true,
+        verifiedAt: new Date().toISOString()
+      };
+      sessionStorage.setItem('gharsaathi_worker_session', JSON.stringify(userSession));
+      localStorage.setItem('user_mobile_number', rawPhone);
+
       setTimeout(() => {
-        // Save mock user session for dashboard demonstration
-        authService.verifyOtp(rawPhone, otp).finally(() => {
-          const target = mode === 'signup' ? '/worker/verification' : '/worker/dashboard';
-          navigate(target, { replace: true });
-        });
-      }, 600);
-    }, 400);
+        const target = mode === 'signup' ? '/worker/verification' : '/worker/dashboard';
+        navigate(target, { replace: true });
+      }, 700);
+    } catch (err: any) {
+      console.error('OTP verification error:', err);
+      setError(err?.message || 'Invalid OTP. Please check the code and try again.');
+      setIsLoading(false);
+    }
   };
 
-  const handleResend = () => {
+  const handleResend = async () => {
     setOtp('');
     setError(undefined);
-    setResendNotification('OTP sent again');
-    
-    // Auto clear notification after 3 seconds
-    setTimeout(() => {
-      setResendNotification((prev) => (prev === 'OTP sent again' ? undefined : prev));
-    }, 3000);
+    setIsLoading(true);
+
+    try {
+      await sendOtpSms(rawPhone);
+      setResendNotification(t('auth.otp.otpResentSuccess', { lng: activeLangCode }) || 'OTP sent again successfully');
+
+      setTimeout(() => {
+        setResendNotification(undefined);
+      }, 3500);
+    } catch (err: any) {
+      setError(err?.message || 'Failed to resend OTP. Please try again.');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -86,21 +118,29 @@ export const WorkerVerify: React.FC = () => {
         <div className="-mt-1">
           <Link
             to={mode === 'login' ? '/worker/login' : '/worker/signup'}
-            className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#6B6B6B] hover:text-[#A66666] transition-colors focus:outline-none focus:ring-1 focus:ring-[#A66666] rounded"
+            className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#66737D] hover:text-[#1C516C] transition-colors focus:outline-none focus:ring-1 focus:ring-[#1C516C] rounded"
           >
             <ArrowLeft className="w-3.5 h-3.5" />
-            <span>Change mobile number</span>
+            <span>{changeNumberText}</span>
           </Link>
         </div>
 
         {/* Header Section */}
         <div className="text-center space-y-1.5">
-          <h1 className="text-2xl sm:text-[26px] font-bold tracking-tight text-[#222222]">
-            Verify your mobile number
-          </h1>
-          <div className="text-sm sm:text-[15px] text-[#6B6B6B] leading-relaxed max-w-[320px] mx-auto space-y-0.5">
-            <p>Enter the 6-digit OTP sent to your mobile number.</p>
-            <p className="font-semibold text-[#222222] tracking-wider pt-0.5">
+          <div className="flex items-center justify-center gap-2">
+            <h1 className="text-2xl sm:text-[26px] font-bold tracking-tight text-[#17212B]">
+              {headingText}
+            </h1>
+            <SpeakerButton
+              text={fullText}
+              langCode={activeLangCode}
+              size="sm"
+              label="Listen instructions"
+            />
+          </div>
+          <div className="text-sm sm:text-[15px] text-[#66737D] leading-relaxed max-w-[320px] mx-auto space-y-0.5">
+            <p>{enterOtpText}</p>
+            <p className="font-semibold text-[#17212B] tracking-wider pt-0.5">
               {maskedPhone}
             </p>
           </div>
@@ -120,7 +160,7 @@ export const WorkerVerify: React.FC = () => {
               disabled={isLoading || Boolean(successMessage)}
             />
 
-            {/* OTP Validity Timer Placeholder */}
+            {/* OTP Validity Timer */}
             <OTPTimer timeString="02:00" />
 
             {/* Error Message */}
@@ -132,15 +172,15 @@ export const WorkerVerify: React.FC = () => {
 
             {/* Resend Notification Message */}
             {resendNotification && (
-              <p className="text-xs sm:text-sm text-[#A66666] font-medium text-center animate-fadeIn">
+              <p className="text-xs sm:text-sm text-[#1C516C] font-semibold text-center animate-fadeIn">
                 {resendNotification}
               </p>
             )}
 
             {/* Success State */}
             {successMessage && (
-              <div className="flex items-center justify-center gap-1.5 text-sm text-[#222222] font-semibold text-center animate-fadeIn">
-                <CheckCircle2 className="w-4 h-4 text-[#A66666]" />
+              <div className="flex items-center justify-center gap-1.5 text-sm text-[#2E9B57] font-semibold text-center animate-fadeIn">
+                <CheckCircle2 className="w-4 h-4 text-[#2E9B57]" />
                 <span>{successMessage}</span>
               </div>
             )}
@@ -151,26 +191,27 @@ export const WorkerVerify: React.FC = () => {
             <AuthButton
               type="submit"
               variant="outline"
-              disabled={isLoading || Boolean(successMessage)}
+              disabled={isLoading || Boolean(successMessage) || otp.length < 6}
               isLoading={isLoading}
             >
-              Verify OTP
+              {verifyOtpText}
             </AuthButton>
           </div>
         </form>
 
         {/* Resend OTP Section */}
         <div className="text-center pt-2 border-t border-slate-100 space-y-1">
-          <p className="text-sm text-[#6B6B6B]">
-            Didn't receive the OTP?
+          <p className="text-sm text-[#66737D]">
+            {didntReceiveText}
           </p>
           <div>
             <button
               type="button"
               onClick={handleResend}
-              className="text-sm font-semibold text-[#A66666] hover:underline underline-offset-4 focus:outline-none focus:ring-1 focus:ring-[#A66666] rounded p-0.5 transition-colors"
+              disabled={isLoading}
+              className="text-sm font-semibold text-[#1C516C] hover:underline underline-offset-4 focus:outline-none focus:ring-1 focus:ring-[#1C516C] rounded p-0.5 transition-colors disabled:opacity-50 cursor-pointer"
             >
-              Resend OTP
+              {resendOtpText}
             </button>
           </div>
         </div>
