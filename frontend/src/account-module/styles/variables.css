@@ -1,0 +1,106 @@
+/* ==========================================================================
+   Account Module Design System Tokens & Variables
+   ========================================================================== */
+
+:root {
+  /* Brand Colors */
+  --primary: rgb(166, 102, 102);
+  --primary-rgb: 166, 102, 102;
+  --primary-hover: rgb(148, 88, 88);
+  --primary-light: rgba(166, 102, 102, 0.08);
+  --primary-subtle: rgba(166, 102, 102, 0.15);
+  --primary-border: rgba(166, 102, 102, 0.25);
+  --primary-gradient: linear-gradient(135deg, #fdf8f7 0%, #faece9 100%);
+  
+  /* Status Colors */
+  --status-available: rgb(166, 102, 102);
+  --status-available-bg: rgba(166, 102, 102, 0.06);
+  --status-success: #16A34A;
+  --status-success-bg: #EAF7ED;
+  --status-danger: #DC2626;
+  --status-danger-bg: #FEE2E2;
+  --status-in-progress: #E65100;
+  --status-in-progress-bg: #FFF3E0;
+  --status-upcoming: #1565C0;
+  --status-upcoming-bg: #E3F2FD;
+
+  /* Neutrals & Surfaces (Default: Light Theme) */
+  --bg-app: #F8F9FA;
+  --bg-card: #FFFFFF;
+  --bg-card-hover: #FCFDFD;
+  --bg-subtle: #F3F4F6;
+  --bg-pill: #F0F2F5;
+  --bg-sidebar: #FFFFFF;
+  --sidebar-border: #ECEEEF;
+  
+  /* Text & Icons */
+  --text-primary: #1A1F26;
+  --text-secondary: #5F6B7A;
+  --text-tertiary: #8C96A5;
+  --text-inverse: #FFFFFF;
+  
+  /* Borders & Dividers */
+  --border-light: #EBECEF;
+  --border-subtle: #F1F3F5;
+  --border-medium: #D1D5DB;
+  --border-dark: #9CA3AF;
+  --border-focus: rgba(166, 102, 102, 0.5);
+  
+  /* Radii */
+  --radius-xs: 6px;
+  --radius-sm: 10px;
+  --radius-md: 14px;
+  --radius-lg: 18px;
+  --radius-xl: 24px;
+  --radius-pill: 9999px;
+  
+  /* Shadows */
+  --shadow-sm: 0 2px 6px rgba(0, 0, 0, 0.04);
+  --shadow-md: 0 4px 14px rgba(0, 0, 0, 0.06);
+  --shadow-lg: 0 8px 24px rgba(166, 102, 102, 0.12);
+  --shadow-card: 0 2px 10px rgba(28, 39, 49, 0.04);
+  --shadow-float: 0 10px 30px rgba(0, 0, 0, 0.08);
+
+  /* Typography */
+  --font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  
+  /* Layout Transitions */
+  --transition-fast: 0.18s ease;
+  --transition-normal: 0.28s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Dark Theme Overrides */
+[data-theme="dark"] {
+  --bg-app: #111317;
+  --bg-card: #1B2028;
+  --bg-card-hover: #222833;
+  --bg-subtle: #242B36;
+  --bg-pill: #28313E;
+  --bg-sidebar: #171B22;
+  --sidebar-border: #28303C;
+
+  --text-primary: #F3F4F6;
+  --text-secondary: #9CA3AF;
+  --text-tertiary: #6B7280;
+  --text-inverse: #111317;
+
+  --border-light: #2A3341;
+  --border-subtle: #252D3A;
+  --border-medium: #374151;
+  --border-dark: #4B5563;
+
+  --primary-light: rgba(166, 102, 102, 0.2);
+  --primary-subtle: rgba(166, 102, 102, 0.28);
+  --primary-gradient: linear-gradient(135deg, #261D1E 0%, #1D1819 100%);
+
+  --shadow-sm: 0 2px 6px rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 4px 14px rgba(0, 0, 0, 0.4);
+  --shadow-card: 0 2px 10px rgba(0, 0, 0, 0.3);
+  --shadow-float: 0 10px 30px rgba(0, 0, 0, 0.5);
+
+  --status-available-bg: rgba(166, 102, 102, 0.15);
+  --status-success-bg: rgba(22, 163, 74, 0.15);
+  --status-danger-bg: rgba(220, 38, 38, 0.15);
+  --status-in-progress-bg: rgba(230, 81, 0, 0.15);
+  --status-upcoming-bg: rgba(21, 101, 192, 0.15);
+}

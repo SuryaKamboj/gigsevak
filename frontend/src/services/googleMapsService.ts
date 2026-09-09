@@ -119,28 +119,54 @@ export async function geocodeAddress(
 ): Promise<{ lat: number; lng: number; address: string } | null> {
   if (!address.trim()) return null;
 
-  try {
-    const google = await loadGoogleMaps();
-    const geocoder = new google.maps.Geocoder();
+  // 1. Try Google Maps Geocoder
+  if (isGoogleMapsConfigured()) {
+    try {
+      const google = await loadGoogleMaps();
+      const geocoder = new google.maps.Geocoder();
 
-    return new Promise((resolve) => {
-      geocoder.geocode({ address }, (results: any[], status: any) => {
-        if (status === google.maps.GeocoderStatus.OK && results && results[0]) {
-          const location = results[0].geometry.location;
-          resolve({
-            lat: typeof location.lat === 'function' ? location.lat() : location.lat,
-            lng: typeof location.lng === 'function' ? location.lng() : location.lng,
-            address: results[0].formatted_address,
-          });
-        } else {
-          resolve(null);
-        }
+      const googleResult = await new Promise<{ lat: number; lng: number; address: string } | null>((resolve) => {
+        geocoder.geocode({ address }, (results: any[], status: any) => {
+          if (status === google.maps.GeocoderStatus.OK && results && results[0]) {
+            const location = results[0].geometry.location;
+            resolve({
+              lat: typeof location.lat === 'function' ? location.lat() : location.lat,
+              lng: typeof location.lng === 'function' ? location.lng() : location.lng,
+              address: results[0].formatted_address,
+            });
+          } else {
+            resolve(null);
+          }
+        });
       });
-    });
-  } catch (error) {
-    console.warn('Geocode address error:', error);
-    return null;
+
+      if (googleResult) return googleResult;
+    } catch (error) {
+      console.warn('Google geocode error, using fallback:', error);
+    }
   }
+
+  // 2. Fallback to OpenStreetMap Nominatim
+  try {
+    const res = await fetch(
+      `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(address)}&limit=1`,
+      { headers: { Accept: 'application/json' } }
+    );
+    if (res.ok) {
+      const list = await res.json();
+      if (Array.isArray(list) && list.length > 0) {
+        return {
+          lat: parseFloat(list[0].lat),
+          lng: parseFloat(list[0].lon),
+          address: list[0].display_name,
+        };
+      }
+    }
+  } catch (e) {
+    console.warn('Nominatim geocode address error:', e);
+  }
+
+  return null;
 }
 
 /**
@@ -179,31 +205,92 @@ export async function getPlaceCoordinates(
 export async function reverseGeocodeLatLng(
   lat: number,
   lng: number
-): Promise<{ address: string; city?: string; state?: string } | null> {
-  try {
-    const google = await loadGoogleMaps();
-    const geocoder = new google.maps.Geocoder();
+): Promise<{ address: string; city?: string; state?: string; pincode?: string }> {
+  // 1. Try Google Maps Geocoder first
+  if (isGoogleMapsConfigured()) {
+    try {
+      const google = await loadGoogleMaps();
+      const geocoder = new google.maps.Geocoder();
 
-    return new Promise((resolve) => {
-      geocoder.geocode({ location: { lat, lng } }, (results: any[], status: any) => {
-        if (status === google.maps.GeocoderStatus.OK && results && results[0]) {
-          const address = results[0].formatted_address;
-          let city: string | undefined;
-          let state: string | undefined;
+      const googleResult = await new Promise<{ address: string; city?: string; state?: string; pincode?: string } | null>(
+        (resolve) => {
+          geocoder.geocode({ location: { lat, lng } }, (results: any[], status: any) => {
+            if (status === google.maps.GeocoderStatus.OK && results && results[0]) {
+              const address = results[0].formatted_address;
+              let locality: string | undefined;
+              let sublocality: string | undefined;
+              let district: string | undefined;
+              let state: string | undefined;
+              let pincode: string | undefined;
 
-          results[0].address_components?.forEach((comp: any) => {
-            if (comp.types?.includes('locality')) city = comp.long_name;
-            if (comp.types?.includes('administrative_area_level_1')) state = comp.long_name;
+              results[0].address_components?.forEach((comp: any) => {
+                if (comp.types?.includes('locality')) locality = comp.long_name;
+                if (comp.types?.includes('sublocality_level_1') || comp.types?.includes('sublocality'))
+                  sublocality = comp.long_name;
+                if (comp.types?.includes('administrative_area_level_2')) district = comp.long_name;
+                if (comp.types?.includes('administrative_area_level_1')) state = comp.long_name;
+                if (comp.types?.includes('postal_code')) pincode = comp.long_name;
+              });
+
+              const city = locality || sublocality || district || state;
+
+              if (!pincode && address) {
+                const pinMatch = address.match(/\b([1-9][0-9]{5})\b/);
+                if (pinMatch) pincode = pinMatch[1];
+              }
+
+              resolve({ address, city, state, pincode });
+            } else {
+              resolve(null);
+            }
           });
-
-          resolve({ address, city, state });
-        } else {
-          resolve(null);
         }
-      });
-    });
-  } catch (error) {
-    console.warn('Reverse geocode error:', error);
-    return null;
+      );
+
+      if (googleResult) return googleResult;
+    } catch (error) {
+      console.warn('Google reverse geocode error, attempting fallback:', error);
+    }
   }
+
+  // 2. Fallback to OpenStreetMap Nominatim Reverse Geocoding
+  try {
+    const res = await fetch(
+      `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`,
+      { headers: { Accept: 'application/json' } }
+    );
+    if (res.ok) {
+      const data = await res.json();
+      const addr = data.address || {};
+      const locality = addr.suburb || addr.neighbourhood || addr.residential || '';
+      const city =
+        addr.city || addr.town || addr.village || addr.county || addr.state_district || locality || 'Jalandhar';
+      const state = addr.state || 'Punjab';
+      const pincode = addr.postcode || '';
+      const address = data.display_name || `${locality ? locality + ', ' : ''}${city}, ${state}`;
+
+      let cleanPincode = pincode;
+      if (!cleanPincode && address) {
+        const pinMatch = address.match(/\b([1-9][0-9]{5})\b/);
+        if (pinMatch) cleanPincode = pinMatch[1];
+      }
+
+      return {
+        address,
+        city,
+        state,
+        pincode: cleanPincode,
+      };
+    }
+  } catch (e) {
+    console.warn('Nominatim reverse geocode error:', e);
+  }
+
+  // 3. Guaranteed Fallback
+  return {
+    address: `Location Pinpoint (${lat.toFixed(4)}, ${lng.toFixed(4)})`,
+    city: 'Jalandhar',
+    state: 'Punjab',
+    pincode: '144001',
+  };
 }

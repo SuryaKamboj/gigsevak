@@ -1,0 +1,827 @@
+/* ==========================================================================
+   GigSevak Completed Jobs & Job Details Styles
+   SIH26089 – Cooperative Gig Services Platform for Household & Community Services
+   Brand Color: rgb(166, 102, 102)
+   Zero Emojis - Professional Line UI & Accessible Forms
+   ========================================================================== */
+
+#view-completed-jobs,
+#view-completed-job-detail {
+  min-height: 100vh;
+  background-color: var(--bg-app);
+  padding-bottom: 120px;
+}
+
+/* --------------------------------------------------------------------------
+   Top Sticky Header
+   -------------------------------------------------------------------------- */
+.completed-header {
+  position: relative;
+  top: auto;
+  z-index: 10;
+  background-color: var(--bg-card);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-lg, 14px);
+  padding: 16px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  box-shadow: var(--shadow-sm);
+  margin-top: 4px;
+  margin-bottom: 14px;
+}
+
+.completed-header-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.completed-header-title {
+  font-size: 18px;
+  font-weight: 800;
+  color: var(--text-primary);
+  letter-spacing: -0.3px;
+  margin: 0;
+}
+
+/* --------------------------------------------------------------------------
+   Main Container
+   -------------------------------------------------------------------------- */
+.completed-container {
+  width: 100%;
+  max-width: 680px;
+  margin: 0 auto;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+@media (min-width: 1024px) {
+  .completed-container {
+    max-width: 860px;
+    padding: 24px 28px;
+    gap: 20px;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   Intro Card
+   -------------------------------------------------------------------------- */
+.completed-intro-card {
+  background-color: var(--bg-card);
+  border-radius: var(--radius-lg);
+  padding: 20px 22px;
+  border: 1px solid var(--border-light);
+  box-shadow: var(--shadow-sm);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.completed-page-heading {
+  font-size: 20px;
+  font-weight: 800;
+  color: var(--text-primary);
+  margin: 0;
+  letter-spacing: -0.3px;
+}
+
+.completed-page-subtitle {
+  font-size: 14px;
+  color: var(--text-secondary);
+  font-weight: 600;
+  margin: 0;
+}
+
+/* --------------------------------------------------------------------------
+   Search & Filter Bar
+   -------------------------------------------------------------------------- */
+.completed-toolbar {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+@media (min-width: 640px) {
+  .completed-toolbar {
+    flex-direction: row;
+    align-items: center;
+    gap: 12px;
+  }
+}
+
+.completed-search-wrap {
+  position: relative;
+  flex: 1;
+  display: flex;
+  align-items: center;
+}
+
+.completed-search-icon {
+  position: absolute;
+  left: 14px;
+  color: var(--text-muted);
+  pointer-events: none;
+  display: flex;
+  align-items: center;
+}
+
+.completed-search-input {
+  width: 100%;
+  padding: 11px 16px 11px 40px;
+  border: 1.5px solid var(--border-light);
+  border-radius: var(--radius-md);
+  background-color: var(--bg-card);
+  color: var(--text-primary);
+  font-size: 14px;
+  font-family: inherit;
+  outline: none;
+  transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+.completed-search-input:focus {
+  border-color: rgb(166, 102, 102);
+  box-shadow: 0 0 0 3px rgba(166, 102, 102, 0.15);
+}
+
+.completed-search-clear {
+  position: absolute;
+  right: 12px;
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 4px;
+  display: flex;
+  align-items: center;
+  border-radius: 50%;
+}
+
+.completed-search-clear:hover {
+  color: var(--text-primary);
+  background-color: var(--bg-subtle);
+}
+
+.completed-filters-row {
+  display: flex;
+  gap: 10px;
+}
+
+.completed-select {
+  padding: 11px 32px 11px 14px;
+  border: 1.5px solid var(--border-light);
+  border-radius: var(--radius-md);
+  background-color: var(--bg-card);
+  color: var(--text-primary);
+  font-size: 13.5px;
+  font-weight: 600;
+  font-family: inherit;
+  outline: none;
+  cursor: pointer;
+  appearance: none;
+  -webkit-appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2364748B' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  transition: border-color var(--transition-fast);
+}
+
+.completed-select:focus {
+  border-color: rgb(166, 102, 102);
+}
+
+/* --------------------------------------------------------------------------
+   Jobs List & Cards
+   -------------------------------------------------------------------------- */
+.completed-jobs-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.completed-job-card {
+  background-color: var(--bg-card);
+  border-radius: var(--radius-lg);
+  border: 1.5px solid var(--border-light);
+  padding: 16px 18px;
+  box-shadow: var(--shadow-sm);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  cursor: pointer;
+  transition: transform var(--transition-fast), border-color var(--transition-fast), box-shadow var(--transition-fast);
+  text-decoration: none;
+}
+
+.completed-job-card:hover {
+  border-color: rgba(166, 102, 102, 0.45);
+  box-shadow: var(--shadow-md);
+  transform: translateY(-1px);
+}
+
+.completed-job-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid var(--border-light);
+  padding-bottom: 10px;
+}
+
+.completed-job-date {
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--text-secondary);
+  letter-spacing: 0.2px;
+}
+
+.completed-job-id-pill {
+  font-size: 11.5px;
+  font-weight: 700;
+  color: var(--text-muted);
+  background-color: var(--bg-subtle);
+  padding: 3px 8px;
+  border-radius: 4px;
+}
+
+.completed-job-body {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.completed-customer-avatar {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  object-fit: cover;
+  flex-shrink: 0;
+  border: 2px solid var(--border-light);
+}
+
+@media (min-width: 640px) {
+  .completed-customer-avatar {
+    width: 52px;
+    height: 52px;
+  }
+}
+
+.completed-job-info {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.completed-job-service-name {
+  font-size: 15.5px;
+  font-weight: 800;
+  color: var(--text-primary);
+  margin: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.completed-job-meta-line {
+  font-size: 13px;
+  color: var(--text-secondary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.completed-job-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-top: 10px;
+  border-top: 1px solid var(--border-light);
+}
+
+.completed-job-amount-rating {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.completed-rating-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12.5px;
+  font-weight: 700;
+  color: #D97706;
+}
+
+.completed-badge-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background-color: rgba(1, 71, 31, 0.08);
+  color: var(--status-success);
+  font-size: 12px;
+  font-weight: 700;
+  padding: 4px 10px;
+  border-radius: 12px;
+}
+
+/* Empty State */
+.completed-empty-state {
+  background-color: var(--bg-card);
+  border-radius: var(--radius-lg);
+  border: 1px dashed var(--border-light);
+  padding: 48px 24px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+
+.completed-empty-title {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.completed-empty-desc {
+  font-size: 13.5px;
+  color: var(--text-secondary);
+  margin: 0;
+  max-width: 360px;
+}
+
+/* --------------------------------------------------------------------------
+   Job Details View Styles (Mobile-first, Professional Mobile App Layout)
+   -------------------------------------------------------------------------- */
+#view-completed-job-detail {
+  min-height: 100vh;
+  background-color: var(--bg-app);
+  padding-bottom: 96px; /* Clearance above fixed bottom navigation */
+}
+
+/* Mobile: use available width properly with comfortable 16px horizontal margins */
+#view-completed-job-detail .completed-container {
+  width: 100%;
+  max-width: 100%;
+  padding: 14px 16px;
+  margin: 0 auto;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+#view-completed-job-detail .job-detail-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+}
+
+#view-completed-job-detail .job-detail-2col {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+}
+
+/* Card: white background, rounded corners, subtle border/shadow, compact 16px padding */
+#view-completed-job-detail .job-detail-card {
+  background-color: var(--bg-card);
+  border-radius: var(--radius-lg, 14px);
+  border: 1px solid var(--border-light);
+  padding: 16px;
+  box-shadow: var(--shadow-sm);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+/* Section Header */
+#view-completed-job-detail .job-detail-card-title {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border-bottom: 1px solid var(--border-light);
+  padding-bottom: 11px;
+}
+
+#view-completed-job-detail .job-detail-card-title svg {
+  color: rgb(166, 102, 102);
+  flex-shrink: 0;
+}
+
+/* Information rows list */
+#view-completed-job-detail .job-detail-rows {
+  display: flex;
+  flex-direction: column;
+  gap: 11px;
+  width: 100%;
+}
+
+/* Block rows (e.g. Job Description, Work Performed, Customer Review) */
+#view-completed-job-detail .job-detail-row {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  align-items: stretch !important;
+  text-align: left;
+  width: 100%;
+}
+
+/* Compact Information Rows on Mobile:
+   Two-column grid layout (42% Label | 58% Value)
+   Left-aligned, smaller muted labels, darker/stronger values, no giant gaps */
+#view-completed-job-detail .job-detail-row.inline {
+  display: grid;
+  grid-template-columns: 42% 58%;
+  gap: 8px;
+  align-items: baseline;
+  text-align: left;
+}
+
+/* Labels: 12-13px, muted, sentence/title-case (not uppercase), left-aligned */
+#view-completed-job-detail .job-detail-label {
+  font-size: 12.5px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  text-transform: none;
+  letter-spacing: normal;
+  text-align: left;
+  line-height: 1.35;
+  margin: 0;
+}
+
+/* Values: 14px, slightly stronger/darker, left-aligned */
+#view-completed-job-detail .job-detail-value {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-primary);
+  text-align: left;
+  line-height: 1.35;
+  word-break: break-word;
+  overflow-wrap: break-word;
+  margin: 0;
+}
+
+#view-completed-job-detail .job-detail-value.highlight {
+  font-size: 14.5px;
+  font-weight: 700;
+  color: rgb(166, 102, 102);
+}
+
+/* Job Description Box:
+   Comfortable padding, rounded corners, subtle left accent rgb(166,102,102),
+   light neutral background, wraps naturally, not excessively tall */
+#view-completed-job-detail .job-detail-desc-box {
+  background-color: var(--bg-subtle, #f8f9fa);
+  border-radius: var(--radius-sm, 6px);
+  padding: 10px 12px;
+  font-size: 13px;
+  color: var(--text-primary);
+  line-height: 1.5;
+  border-left: 3px solid rgb(166, 102, 102);
+  word-break: break-word;
+  overflow-wrap: break-word;
+  box-sizing: border-box;
+}
+
+/* Status Pill:
+   Small, compact status pill with subtle green styling, small normal check icon, no emoji */
+#view-completed-job-detail .completed-badge-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background-color: rgba(1, 71, 31, 0.08);
+  color: var(--status-success);
+  font-size: 12px;
+  font-weight: 600;
+  padding: 3px 9px;
+  border-radius: 12px;
+  justify-self: start;
+  width: fit-content;
+}
+
+#view-completed-job-detail .completed-badge-pill svg {
+  flex-shrink: 0;
+}
+
+/* Customer & Location Details Header */
+#view-completed-job-detail .customer-detail-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 2px;
+}
+
+/* Circular customer image: 48-52px, vertically aligned, realistic */
+#view-completed-job-detail .customer-detail-avatar {
+  width: 50px;
+  height: 50px;
+  min-width: 50px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 1.5px solid var(--border-light);
+  flex-shrink: 0;
+}
+
+#view-completed-job-detail .customer-detail-name {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin: 0;
+  line-height: 1.25;
+}
+
+#view-completed-job-detail .customer-detail-sub {
+  font-size: 12px;
+  color: var(--text-secondary);
+  font-weight: 500;
+  margin: 3px 0 0 0;
+}
+
+/* Payment Breakdown Table */
+#view-completed-job-detail .payment-breakdown-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  background-color: var(--bg-subtle, #f8f9fa);
+  border-radius: 8px;
+  padding: 10px 12px;
+  border: 1px solid var(--border-light);
+  box-sizing: border-box;
+}
+
+#view-completed-job-detail .payment-breakdown-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  font-size: 13px;
+}
+
+#view-completed-job-detail .payment-breakdown-row span:first-child {
+  font-size: 12.5px;
+  font-weight: 500;
+  color: var(--text-secondary);
+}
+
+#view-completed-job-detail .payment-breakdown-row span:last-child {
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+#view-completed-job-detail .payment-breakdown-row.total {
+  border-top: 1px dashed var(--border-light);
+  padding-top: 8px;
+  margin-top: 2px;
+}
+
+#view-completed-job-detail .payment-breakdown-row.total span:first-child {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+#view-completed-job-detail .payment-breakdown-row.total span:last-child {
+  font-size: 15.5px;
+  font-weight: 800;
+  color: rgb(166, 102, 102);
+}
+
+/* Payment Status Pill */
+#view-completed-job-detail .payment-status-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background-color: rgba(1, 71, 31, 0.08);
+  color: var(--status-success);
+  font-size: 12px;
+  font-weight: 600;
+  padding: 3px 9px;
+  border-radius: 12px;
+  justify-self: start;
+  width: fit-content;
+}
+
+#view-completed-job-detail .payment-status-pill svg {
+  flex-shrink: 0;
+}
+
+/* Rating Badge */
+#view-completed-job-detail .completed-rating-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 13.5px;
+  font-weight: 700;
+  color: #D97706;
+  justify-self: start;
+  width: fit-content;
+}
+
+/* Customer Review Quote Box */
+#view-completed-job-detail .review-quote-box {
+  background-color: var(--bg-subtle, #f8f9fa);
+  border-radius: var(--radius-sm, 6px);
+  padding: 10px 12px;
+  font-size: 13px;
+  color: var(--text-primary);
+  font-style: italic;
+  line-height: 1.5;
+  border-left: 3px solid #D97706;
+  word-break: break-word;
+  overflow-wrap: break-word;
+  box-sizing: border-box;
+}
+
+/* Photo Galleries */
+#view-completed-job-detail .photos-gallery-section {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+#view-completed-job-detail .photos-gallery-title {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  margin: 0;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+#view-completed-job-detail .photos-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px;
+}
+
+#view-completed-job-detail .photo-thumb-card {
+  position: relative;
+  aspect-ratio: 4/3;
+  border-radius: 6px;
+  overflow: hidden;
+  border: 1px solid var(--border-light);
+  cursor: pointer;
+  background-color: var(--bg-subtle);
+  transition: transform var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+#view-completed-job-detail .photo-thumb-card:hover {
+  transform: scale(1.02);
+  box-shadow: var(--shadow-md);
+}
+
+#view-completed-job-detail .photo-thumb-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+#view-completed-job-detail .photo-thumb-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.38);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity var(--transition-fast);
+  color: #ffffff;
+}
+
+#view-completed-job-detail .photo-thumb-card:hover .photo-thumb-overlay {
+  opacity: 1;
+}
+
+#view-completed-job-detail .photo-thumb-caption {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.78), transparent);
+  color: #ffffff;
+  font-size: 10.5px;
+  font-weight: 600;
+  padding: 5px 6px 3px 6px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ==========================================================================
+   Narrow Mobile Screens Breakpoint (<= 360px: e.g. 320px, 360px)
+   ========================================================================== */
+@media (max-width: 360px) {
+  #view-completed-job-detail .completed-container {
+    padding: 10px 12px;
+    gap: 10px;
+  }
+
+  #view-completed-job-detail .job-detail-card {
+    padding: 12px 14px;
+    gap: 10px;
+  }
+
+  #view-completed-job-detail .job-detail-row.inline {
+    grid-template-columns: 45% 55%;
+    gap: 6px;
+  }
+
+  #view-completed-job-detail .job-detail-label {
+    font-size: 12px;
+  }
+
+  #view-completed-job-detail .job-detail-value {
+    font-size: 13px;
+  }
+}
+
+/* ==========================================================================
+   DESKTOP / LAPTOP BREAKPOINTS (>= 769px)
+   Keep desktop design completely intact:
+   2-column layout, generous card padding, right-aligned values
+   ========================================================================== */
+@media (min-width: 769px) {
+  #view-completed-job-detail .completed-container {
+    max-width: 880px;
+    padding: 24px 28px;
+    gap: 18px;
+  }
+
+  #view-completed-job-detail .job-detail-grid {
+    gap: 18px;
+  }
+
+  #view-completed-job-detail .job-detail-2col {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 18px;
+  }
+
+  #view-completed-job-detail .job-detail-card {
+    padding: 20px 22px;
+    border-radius: var(--radius-lg);
+    gap: 16px;
+  }
+
+  #view-completed-job-detail .job-detail-card-title {
+    font-size: 16.5px;
+    padding-bottom: 12px;
+  }
+
+  #view-completed-job-detail .job-detail-rows {
+    gap: 12px;
+  }
+
+  #view-completed-job-detail .job-detail-row.inline {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: baseline;
+  }
+
+  #view-completed-job-detail .job-detail-label {
+    font-size: 12.5px;
+    font-weight: 600;
+  }
+
+  #view-completed-job-detail .job-detail-value {
+    text-align: right;
+  }
+
+  #view-completed-job-detail .customer-detail-avatar {
+    width: 54px;
+    height: 54px;
+  }
+
+  #view-completed-job-detail .customer-detail-name {
+    font-size: 17px;
+  }
+
+  #view-completed-job-detail .payment-breakdown-list {
+    padding: 12px 14px;
+    gap: 10px;
+  }
+
+  #view-completed-job-detail .photos-grid {
+    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+    gap: 10px;
+  }
+}

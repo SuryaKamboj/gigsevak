@@ -19,14 +19,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, onSelectTab }) => {
   ];
 
   return (
-    <aside className="hidden md:flex flex-col items-center w-20 min-h-screen bg-white border-r border-[#E5E7EB] py-6 fixed left-0 top-0 bottom-0 z-40 shadow-soft">
-      {/* Top Logo Glyph / Mini Mark */}
-      <div className="mb-8 flex items-center justify-center">
-        <span className="font-sans text-xl font-bold tracking-tight text-[#A66666] select-none">
-          G<span className="text-[#292323]">S</span>
-        </span>
-      </div>
-
+    <aside className="hidden md:flex flex-col items-center w-20 bg-white border-r border-[#E5E7EB] py-5 fixed left-0 top-16 bottom-0 z-30 shadow-soft">
       {/* Navigation Icons List (No text labels) */}
       <nav className="flex-1 flex flex-col items-center gap-4 w-full px-3">
         {navItems.map((item) => {

@@ -1,8 +1,7 @@
 import React from 'react';
-import { Clock, MapPin, User, Check, X, ArrowRight, ChevronRight, CheckSquare, Square, Navigation } from 'lucide-react';
+import { Clock, MapPin, User, Check, X, ArrowRight, ChevronRight, Square, Navigation } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import type { JobItem } from '../../types/dashboard';
-import { getLocalizedJob } from '../../utils/localizedJobs';
 
 interface WorkCardProps {
   job: JobItem;
@@ -17,7 +16,7 @@ interface WorkCardProps {
 }
 
 export const WorkCard: React.FC<WorkCardProps> = ({
-  job: rawJob,
+  job,
   onClick,
   showActions = false,
   showCompleteCheckbox = false,
@@ -28,10 +27,15 @@ export const WorkCard: React.FC<WorkCardProps> = ({
   onToggleReached,
 }) => {
   const { t, i18n } = useTranslation();
-  const activeLangCode = i18n.language || localStorage.getItem('workerLanguage') || 'en';
-  const job = getLocalizedJob(rawJob, activeLangCode);
+  const lang = i18n.language || 'en';
+
+  const serviceName = job.translations?.[lang]?.serviceName || job.serviceName;
+  const clientAddress = job.translations?.[lang]?.clientAddress || job.clientAddress;
+  const scheduledTime = job.translations?.[lang]?.scheduledTime || job.scheduledTime;
+
   const isCompleted = job.status === 'completed';
   const isReached = !!job.isLocationReached;
+  const isInProgress = !!job.workStarted && !isCompleted;
 
   return (
     <div
@@ -39,6 +43,8 @@ export const WorkCard: React.FC<WorkCardProps> = ({
       className={`bg-white rounded-2xl p-3.5 sm:p-4 shadow-xs border transition-all duration-200 flex flex-col gap-3 group cursor-pointer active:scale-[0.99] relative ${
         isCompleted
           ? 'border-emerald-200/80 bg-emerald-50/15'
+          : isInProgress
+          ? 'border-neutral-900/40 bg-neutral-900/[0.02] shadow-xs'
           : 'border-neutral-100 hover:border-brand-primary/40 hover:shadow-md'
       }`}
     >
@@ -48,7 +54,7 @@ export const WorkCard: React.FC<WorkCardProps> = ({
         <div className="relative w-20 h-20 sm:w-24 sm:h-24 rounded-xl overflow-hidden flex-shrink-0 bg-neutral-100">
           <img
             src={job.serviceImage || job.image}
-            alt={job.serviceName}
+            alt={serviceName}
             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
             loading="lazy"
           />
@@ -60,7 +66,7 @@ export const WorkCard: React.FC<WorkCardProps> = ({
           <div className="flex items-start justify-between gap-2">
             <div className="min-w-0 flex-1">
               <h3 className="text-base sm:text-lg font-bold truncate leading-tight text-neutral-dark group-hover:text-brand-primary transition-colors">
-                {job.serviceName}
+                {serviceName}
               </h3>
 
               <div className="flex items-center gap-1.5 mt-1 text-xs sm:text-sm text-neutral-muted truncate">
@@ -94,12 +100,17 @@ export const WorkCard: React.FC<WorkCardProps> = ({
           <div className="mt-2 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1 text-xs text-neutral-muted">
             <div className="flex items-center gap-1.5 truncate">
               <MapPin className="w-3.5 h-3.5 text-brand-primary/70 flex-shrink-0" />
-              <span className="truncate">{job.clientAddress}</span>
+              <span className="truncate">{clientAddress}</span>
             </div>
 
             <div className="flex items-center gap-1.5 font-medium text-neutral-700 flex-shrink-0 mt-0.5 sm:mt-0">
               <Clock className="w-3.5 h-3.5 text-brand-primary flex-shrink-0" />
-              <span>{job.scheduledTime}</span>
+              <span>{scheduledTime}</span>
+              {job.estimatedDuration && (
+                <span className="text-[10px] text-neutral-500 font-semibold ml-1">
+                  ({Math.floor(job.estimatedDuration / 60)}h {job.estimatedDuration % 60 ? `${job.estimatedDuration % 60}m` : ''})
+                </span>
+              )}
             </div>
           </div>
         </div>
@@ -112,21 +123,22 @@ export const WorkCard: React.FC<WorkCardProps> = ({
         )}
       </div>
 
-      {/* Action Buttons Row on Home Page: Reached & Completed */}
+      {/* Action Buttons Row on Home Page: Reached & Completed in a clean 2-column grid */}
       {showCompleteCheckbox && (
         <div className="grid grid-cols-2 gap-2 sm:gap-3 pt-2.5 border-t border-neutral-100">
-          {/* Reached Location Button */}
+          {/* Reached Location Button (Flow 1) */}
           <button
             type="button"
             onClick={(e) => {
               e.stopPropagation();
               onToggleReached?.(e, job);
             }}
-            aria-label={isReached ? `Mark location as not reached for ${job.serviceName}` : `Mark location as reached for ${job.serviceName}`}
-            className={`inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl text-xs sm:text-sm font-bold transition-all duration-150 cursor-pointer active:scale-95 shadow-2xs border-2 ${
+            disabled={isReached}
+            aria-label={isReached ? `Location reached for ${serviceName}` : `Mark location as reached for ${serviceName}`}
+            className={`inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl text-xs sm:text-sm font-bold transition-all duration-150 shadow-2xs border-2 ${
               isReached
-                ? 'bg-[#01471f] text-white border-[#01471f] hover:bg-[#013819]'
-                : 'bg-white hover:bg-[#1C516C]/5 text-[#1C516C] border-[#1C516C]'
+                ? 'bg-[#01471f] text-white border-[#01471f] cursor-default'
+                : 'bg-white hover:bg-[#1C516C]/5 text-[#1C516C] border-[#1C516C] cursor-pointer active:scale-95'
             }`}
           >
             {isReached ? (
@@ -137,26 +149,31 @@ export const WorkCard: React.FC<WorkCardProps> = ({
             <span>{isReached ? t('dashboard.locationReached', 'Location Reached') : t('dashboard.reached', 'Reached')}</span>
           </button>
 
-          {/* Completed button with green border */}
+          {/* Completed Button (Flow 2) */}
           <button
             type="button"
             onClick={(e) => {
               e.stopPropagation();
-              onToggleCompleted?.(e, job);
+              if (!isCompleted) {
+                onToggleCompleted?.(e, job);
+              }
             }}
-            aria-label={isCompleted ? `Mark ${job.serviceName} as pending` : `Mark ${job.serviceName} as completed`}
-            className={`inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl text-xs sm:text-sm font-bold transition-all duration-150 cursor-pointer active:scale-95 shadow-2xs border-2 ${
+            disabled={isCompleted}
+            aria-label={isCompleted ? `${serviceName} is completed` : `Mark ${serviceName} as completed`}
+            className={`inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl text-xs sm:text-sm font-bold transition-all duration-150 shadow-2xs border-2 ${
               isCompleted
-                ? 'bg-[#01471f] text-white border-[#01471f] hover:bg-[#013819]'
-                : 'bg-white hover:bg-emerald-50/50 text-[#01471f] border-[#01471f]'
+                ? 'bg-[#01471f] text-white border-[#01471f] cursor-default opacity-100'
+                : isInProgress
+                ? 'bg-emerald-50 hover:bg-emerald-100/70 text-[#01471f] border-[#01471f] cursor-pointer active:scale-95'
+                : 'bg-white hover:bg-emerald-50/50 text-[#01471f] border-[#01471f] cursor-pointer active:scale-95'
             }`}
           >
             {isCompleted ? (
-              <CheckSquare className="w-4 h-4 text-white stroke-[2.5]" />
+              <Check className="w-4 h-4 stroke-[2.5]" />
             ) : (
               <Square className="w-4 h-4 text-[#01471f] stroke-[2.2]" />
             )}
-            <span>{isCompleted ? t('dashboard.done', 'Completed') : t('dashboard.completed', 'Completed')}</span>
+            <span>{isCompleted ? t('dashboard.completed', 'Completed') : t('dashboard.markCompleted', 'Completed')}</span>
           </button>
         </div>
       )}
@@ -164,42 +181,56 @@ export const WorkCard: React.FC<WorkCardProps> = ({
       {/* Action Buttons Row (Used in All Bookings page only) */}
       {showActions && (
         <div className="flex flex-wrap items-center gap-2 sm:gap-3 pt-3 border-t border-neutral-100">
-          {/* Accept Button */}
-          <button
-            type="button"
-            onClick={(e) => {
-              e.stopPropagation();
-              onAccept?.(e, job);
-            }}
-            aria-label={`Accept booking for ${job.serviceName} from ${job.clientName}`}
-            className="inline-flex items-center justify-center gap-1.5 px-3.5 py-2 bg-[#01471f] hover:bg-[#013819] active:scale-95 text-white text-xs sm:text-sm font-semibold rounded-xl transition-all duration-150 shadow-xs cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#01471f] focus:ring-offset-1"
-          >
-            <Check className="w-4 h-4 stroke-[2.5]" />
-            <span>{t('dashboard.accept', 'Accept')}</span>
-          </button>
+          {job.status === 'accepted' ? (
+            <div className="inline-flex items-center justify-center gap-1.5 px-3.5 py-2 bg-[#01471f] text-white text-xs sm:text-sm font-semibold rounded-xl shadow-xs">
+              <Check className="w-4 h-4 stroke-[2.5]" />
+              <span>{t('dashboard.gigAccepted', 'Gig Accepted')}</span>
+            </div>
+          ) : job.status === 'declined' ? (
+            <div className="inline-flex items-center justify-center gap-1.5 px-3.5 py-2 bg-[#870404] text-white text-xs sm:text-sm font-semibold rounded-xl shadow-xs">
+              <X className="w-4 h-4 stroke-[2.5]" />
+              <span>{t('dashboard.gigDeclined', 'Gig Declined')}</span>
+            </div>
+          ) : (
+            <>
+              {/* Accept Button (Color: #01471f) */}
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onAccept?.(e, job);
+                }}
+                aria-label={`Accept booking for ${serviceName} from ${job.clientName}`}
+                className="inline-flex items-center justify-center gap-1.5 px-3.5 py-2 bg-[#01471f] hover:bg-[#013819] active:scale-95 text-white text-xs sm:text-sm font-semibold rounded-xl transition-all duration-150 shadow-xs cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#01471f] focus:ring-offset-1"
+              >
+                <Check className="w-4 h-4 stroke-[2.5]" />
+                <span>{t('dashboard.accept', 'Accept')}</span>
+              </button>
 
-          {/* Decline Button */}
-          <button
-            type="button"
-            onClick={(e) => {
-              e.stopPropagation();
-              onDecline?.(e, job);
-            }}
-            aria-label={`Decline booking for ${job.serviceName} from ${job.clientName}`}
-            className="inline-flex items-center justify-center gap-1.5 px-3.5 py-2 bg-[#870404] hover:bg-[#700303] active:scale-95 text-white text-xs sm:text-sm font-semibold rounded-xl transition-all duration-150 shadow-xs cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#870404] focus:ring-offset-1"
-          >
-            <X className="w-4 h-4 stroke-[2.5]" />
-            <span>{t('dashboard.decline', 'Decline')}</span>
-          </button>
+              {/* Decline Button (Color: #870404) */}
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onDecline?.(e, job);
+                }}
+                aria-label={`Decline booking for ${serviceName} from ${job.clientName}`}
+                className="inline-flex items-center justify-center gap-1.5 px-3.5 py-2 bg-[#870404] hover:bg-[#700303] active:scale-95 text-white text-xs sm:text-sm font-semibold rounded-xl transition-all duration-150 shadow-xs cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#870404] focus:ring-offset-1"
+              >
+                <X className="w-4 h-4 stroke-[2.5]" />
+                <span>{t('dashboard.decline', 'Decline')}</span>
+              </button>
+            </>
+          )}
 
-          {/* See More Details Button */}
+          {/* See More Details Button (Background: #1C516C) */}
           <button
             type="button"
             onClick={(e) => {
               e.stopPropagation();
               onDetails?.(e, job);
             }}
-            aria-label={`See more details for ${job.serviceName} booking`}
+            aria-label={`See more details for ${serviceName} booking`}
             className="inline-flex items-center justify-center gap-1.5 px-3.5 py-2 bg-[#1C516C] hover:bg-[#164055] active:scale-95 text-white text-xs sm:text-sm font-semibold rounded-xl transition-all duration-150 shadow-xs cursor-pointer sm:ml-auto focus:outline-none focus:ring-2 focus:ring-[#1C516C] focus:ring-offset-1"
           >
             <span>{t('dashboard.seeMoreDetails', 'See More Details')}</span>

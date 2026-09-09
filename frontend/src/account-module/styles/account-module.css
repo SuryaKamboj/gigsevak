@@ -1,0 +1,35 @@
+/* ==========================================================================
+   Account Module - Unified Master Stylesheet
+   Imports all modular stylesheets for the Account module
+   ========================================================================== */
+
+@import "./variables.css";
+@import "./modals.css";
+@import "./account.css";
+@import "./edit-profile.css";
+@import "./change-location.css";
+@import "./insurance.css";
+@import "./kyc.css";
+@import "./completed-jobs.css";
+
+/* Container styling for standalone integration */
+.account-module-root {
+  width: 100%;
+  min-height: auto;
+  background-color: transparent;
+  color: var(--text-primary);
+  font-family: var(--font-family);
+  box-sizing: border-box;
+}
+
+.account-module-root *,
+.account-module-root *::before,
+.account-module-root *::after {
+  box-sizing: border-box;
+}
+
+/* Ensure mobile headers stick cleanly and main containers pad comfortably */
+.account-module-root main {
+  max-width: 900px;
+  margin: 0 auto;
+}

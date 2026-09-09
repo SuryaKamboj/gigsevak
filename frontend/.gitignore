@@ -5,28 +5,68 @@
 # Environment variables & Secrets (CRITICAL)
 .env
 .env.*
-!.env.example
+.env*.local
 *.env
+*.env.*
 *.env.local
 *.env.development.local
 *.env.test.local
 *.env.production.local
+!.env.example
+!.env.sample
+!.env.template
 
-# API Keys, Certificates, & Private Tokens
+# API Keys, Certificates, Keystores & Private Tokens
 *.pem
 *.key
 *.cer
 *.crt
 *.pfx
 *.p12
+*.p8
+*.der
+*.csr
+*.keystore
+*.jks
 *.pub
 id_rsa*
+id_ecdsa*
+id_ed25519*
+id_dsa*
+
+# Credentials, Cloud Secrets & Service Accounts
 secrets.*
+*.secret
+*.secrets
+.secrets*
+*secret*.json
 credentials.json
-serviceAccountKey*.json
-firebase-adminsdk*.json
+*credentials*.json
+*serviceAccount*.json
+*service-account*.json
+*serviceaccount*.json
+*firebase*adminsdk*.json
+*firebase-adminsdk*.json
+client_secret*.json
+client_secrets*.json
 google-services.json
 GoogleService-Info.plist
+token.json
+tokens.json
+*.token
+*.tokens
+.netrc
+
+# Database dumps & local storage files
+*.sqlite
+*.sqlite3
+*.db
+*.dump
+
+# Cloud CLI credentials
+.aws/
+.azure/
+.gcloud/
 
 # Dependencies
 node_modules/
@@ -45,6 +85,9 @@ yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
+firebase-debug.log*
+firestore-debug.log*
+ui-debug.log*
 
 # OS and Editor directories
 .DS_Store

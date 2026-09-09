@@ -30,7 +30,7 @@ export const WorkerDashboard: React.FC = () => {
           />
         );
       case 'orders':
-        return <OrdersPage />;
+        return <OrdersPage jobsList={jobsList} onUpdateJob={handleUpdateJob} />;
       case 'voice':
         return <VoicePage />;
       case 'account':
@@ -51,6 +51,7 @@ export const WorkerDashboard: React.FC = () => {
       <Header
         isAvailable={isAvailable}
         onToggleAvailability={() => setIsAvailable((prev) => !prev)}
+        onLogoClick={() => setActiveTab('home')}
       />
 
       {/* Main Body Layout */}

@@ -1,0 +1,607 @@
+/* ==========================================================================
+   GigSevak Change Your Location Page Styles
+   Brand Primary: rgb(166, 102, 102)
+   Zero Emojis - Clean Mobile App Layout
+   ========================================================================== */
+
+#view-change-location {
+  min-height: auto;
+  background-color: transparent;
+  padding-bottom: 40px;
+}
+
+/* Header */
+.change-location-header {
+  position: relative;
+  top: auto;
+  z-index: 10;
+  background-color: var(--bg-card);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-lg, 14px);
+  padding: 16px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  box-shadow: var(--shadow-sm);
+  margin-top: 4px;
+}
+
+.change-location-header-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.change-location-header-title {
+  font-size: 18px;
+  font-weight: 800;
+  color: var(--text-primary);
+  margin: 0;
+  letter-spacing: -0.3px;
+}
+
+/* Main Container */
+.change-location-container {
+  width: 100%;
+  max-width: 680px;
+  margin: 0 auto;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  box-sizing: border-box;
+}
+
+@media (min-width: 768px) {
+  .change-location-container {
+    padding: 24px 28px;
+    gap: 18px;
+  }
+}
+
+/* Cards */
+.change-location-card {
+  background-color: var(--bg-card);
+  border-radius: var(--radius-lg, 14px);
+  border: 1px solid var(--border-light);
+  padding: 18px 20px;
+  box-shadow: var(--shadow-sm);
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  box-sizing: border-box;
+}
+
+.change-location-card-title {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border-bottom: 1px solid var(--border-light);
+  padding-bottom: 11px;
+}
+
+.change-location-card-title svg {
+  color: rgb(166, 102, 102);
+  flex-shrink: 0;
+}
+
+/* Current Location Summary Box */
+.current-location-summary {
+  background-color: var(--bg-subtle, #f8f9fa);
+  border-radius: 10px;
+  padding: 14px 16px;
+  border: 1px solid var(--border-light);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.current-location-summary-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  font-weight: 700;
+  color: rgb(166, 102, 102);
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+.current-loc-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  font-size: 13px;
+  gap: 10px;
+}
+
+.current-loc-label {
+  color: var(--text-secondary);
+  font-weight: 500;
+  flex-shrink: 0;
+}
+
+.current-loc-value {
+  color: var(--text-primary);
+  font-weight: 600;
+  text-align: right;
+  word-break: break-word;
+}
+
+/* Form row 2 col */
+.change-location-row-2col {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+@media (min-width: 640px) {
+  .change-location-row-2col {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+  }
+}
+
+/* Action Button */
+.btn-save-location {
+  width: 100%;
+  height: 48px;
+  background-color: rgb(166, 102, 102);
+  color: #ffffff;
+  border-radius: 10px;
+  font-size: 15px;
+  font-weight: 700;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: background-color var(--transition-fast), transform var(--transition-fast);
+  box-shadow: 0 2px 8px rgba(166, 102, 102, 0.25);
+  margin-top: 4px;
+}
+
+.btn-save-location:hover {
+  background-color: rgb(148, 86, 86);
+  transform: translateY(-1px);
+}
+
+.btn-save-location:active {
+  transform: translateY(0);
+}
+
+.btn-save-location:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+}
+
+/* Quick Area Dropdown in Location page */
+.quick-area-selector {
+  border: 1.5px solid var(--border-light);
+  border-radius: var(--radius-md, 8px);
+  padding: 10px 12px;
+  background-color: var(--bg-card);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 6px;
+}
+
+.quick-area-toggle-btn {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: none;
+  border: none;
+  width: 100%;
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--text-primary);
+  cursor: pointer;
+  padding: 4px 0;
+}
+
+.quick-area-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding-top: 8px;
+  border-top: 1px solid var(--border-light);
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.quick-area-pill {
+  font-size: 12px;
+  font-weight: 600;
+  padding: 5px 10px;
+  border-radius: 16px;
+  border: 1.5px solid var(--border-light);
+  background-color: var(--bg-subtle);
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: var(--transition-fast);
+}
+
+.quick-area-pill.selected {
+  background-color: rgba(166, 102, 102, 0.12);
+  border-color: rgb(166, 102, 102);
+  color: rgb(166, 102, 102);
+  font-weight: 700;
+}
+
+/* ==========================================================================
+   Google Map & Current Location Integration
+   ========================================================================== */
+
+.change-location-map-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 10px;
+  border-bottom: 1px solid var(--border-light);
+  padding-bottom: 11px;
+}
+
+.change-location-map-header .change-location-card-title {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.btn-use-current-location {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  background-color: rgba(166, 102, 102, 0.08);
+  color: rgb(166, 102, 102);
+  border: 1.5px solid rgba(166, 102, 102, 0.35);
+  padding: 6px 14px;
+  border-radius: 20px;
+  font-size: 12.5px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--transition-fast, 0.2s ease);
+}
+
+.btn-use-current-location:hover:not(:disabled) {
+  background-color: rgb(166, 102, 102);
+  color: #ffffff;
+  border-color: rgb(166, 102, 102);
+  box-shadow: 0 2px 8px rgba(166, 102, 102, 0.3);
+  transform: translateY(-1px);
+}
+
+.btn-use-current-location:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.btn-use-current-location:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+}
+
+.btn-use-current-location .spin-icon {
+  animation: spinLocate 1s linear infinite;
+}
+
+@keyframes spinLocate {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.change-location-map-wrapper {
+  position: relative;
+  width: 100%;
+  height: 280px;
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1px solid var(--border-light);
+  background-color: var(--bg-subtle, #f3f4f6);
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.06);
+}
+
+.change-location-map-canvas {
+  width: 100%;
+  height: 100%;
+}
+
+.change-location-map-loading {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  background-color: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(2px);
+  z-index: 5;
+  color: var(--text-secondary);
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.change-location-map-fallback {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  text-align: center;
+  gap: 8px;
+  color: var(--text-secondary);
+  background-color: var(--bg-subtle);
+}
+
+.change-location-map-fallback svg {
+  color: rgb(166, 102, 102);
+  opacity: 0.7;
+}
+
+.change-location-map-fallback p {
+  font-size: 13px;
+  margin: 0;
+  max-width: 320px;
+}
+
+.change-location-map-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px;
+  font-size: 12px;
+}
+
+.change-location-map-hint {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  color: var(--text-tertiary);
+  font-size: 11.5px;
+}
+
+.change-location-map-hint svg {
+  color: rgb(166, 102, 102);
+  flex-shrink: 0;
+}
+
+.change-location-coords-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 11.5px;
+  color: var(--text-secondary);
+  background-color: var(--bg-subtle, #f8f9fa);
+  padding: 3px 8px;
+  border-radius: 6px;
+  border: 1px solid var(--border-light);
+}
+
+/* Places Search Bar Above Google Map */
+.change-location-search-box {
+  width: 100%;
+}
+
+.change-location-search-input-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  width: 100%;
+  background-color: var(--bg-card, #ffffff);
+  border: 1.5px solid var(--border-light);
+  border-radius: 10px;
+  padding: 0 12px;
+  box-sizing: border-box;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+  transition: border-color var(--transition-fast, 0.2s ease), box-shadow var(--transition-fast, 0.2s ease);
+}
+
+.change-location-search-input-wrapper:focus-within {
+  border-color: rgb(166, 102, 102);
+  box-shadow: 0 0 0 3px rgba(166, 102, 102, 0.15);
+}
+
+.change-location-search-icon {
+  color: rgb(166, 102, 102);
+  flex-shrink: 0;
+}
+
+.change-location-search-input {
+  flex: 1;
+  border: none;
+  outline: none;
+  background: transparent;
+  height: 42px;
+  font-size: 13.5px;
+  font-weight: 500;
+  color: var(--text-primary);
+  padding: 0 8px;
+  box-sizing: border-box;
+}
+
+.change-location-search-input::placeholder {
+  color: var(--text-tertiary);
+  font-size: 13px;
+}
+
+.change-location-search-clear {
+  background: none;
+  border: none;
+  color: var(--text-tertiary);
+  cursor: pointer;
+  font-size: 13px;
+  padding: 4px 6px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color var(--transition-fast, 0.2s ease);
+}
+
+.change-location-search-clear:hover {
+  color: var(--text-primary);
+}
+
+/* Auto-fill notification badge */
+.location-autofill-banner {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background-color: rgba(34, 197, 94, 0.09);
+  border: 1px solid rgba(34, 197, 94, 0.3);
+  color: #15803d;
+  font-size: 12.5px;
+  font-weight: 600;
+  padding: 8px 12px;
+  border-radius: 8px;
+  margin-bottom: 6px;
+  animation: fadeInNotice 0.3s ease-in-out;
+}
+
+.location-autofill-banner svg {
+  color: #16a34a;
+  flex-shrink: 0;
+}
+
+@keyframes fadeInNotice {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Google Places Autocomplete dropdown (.pac-container) */
+.pac-container {
+  z-index: 10000 !important;
+  border-radius: 10px !important;
+  margin-top: 4px !important;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.15), 0 8px 10px -6px rgba(0, 0, 0, 0.1) !important;
+  border: 1px solid var(--border-light, #e2e8f0) !important;
+  font-family: inherit !important;
+  background-color: var(--bg-card, #ffffff) !important;
+  overflow: hidden !important;
+}
+
+.pac-item {
+  padding: 9px 14px !important;
+  cursor: pointer !important;
+  font-size: 13px !important;
+  border-top: 1px solid var(--border-light, #f1f5f9) !important;
+  line-height: 1.4 !important;
+  color: var(--text-secondary, #64748b) !important;
+}
+
+.pac-item:hover,
+.pac-item-selected {
+  background-color: rgba(166, 102, 102, 0.08) !important;
+}
+
+.pac-item-query {
+  font-size: 13.5px !important;
+  color: var(--text-primary, #0f172a) !important;
+  font-weight: 600 !important;
+}
+
+.pac-icon {
+  margin-top: 2px !important;
+}
+
+/* In-app Suggestions Dropdown Fallback & Enhancer */
+.change-location-search-box {
+  position: relative;
+}
+
+.btn-submit-search {
+  background-color: rgb(166, 102, 102);
+  color: #ffffff;
+  border: none;
+  border-radius: 6px;
+  padding: 6px 12px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  margin-left: 6px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  transition: background-color var(--transition-fast, 0.2s ease);
+}
+
+.btn-submit-search:hover {
+  background-color: rgb(148, 86, 86);
+}
+
+.change-location-suggestions-dropdown {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  background-color: var(--bg-card, #ffffff);
+  border: 1px solid var(--border-light, #e2e8f0);
+  border-radius: 10px;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.15);
+  max-height: 220px;
+  overflow-y: auto;
+  z-index: 1000;
+  padding: 4px 0;
+}
+
+.change-location-suggestion-item {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  background: none;
+  border: none;
+  text-align: left;
+  cursor: pointer;
+  border-bottom: 1px solid var(--border-light, #f1f5f9);
+  transition: background-color 0.15s ease;
+  color: var(--text-primary);
+  font-size: 13px;
+}
+
+.change-location-suggestion-item:last-child {
+  border-bottom: none;
+}
+
+.change-location-suggestion-item:hover {
+  background-color: rgba(166, 102, 102, 0.08);
+}
+
+.suggestion-text-main {
+  font-weight: 600;
+  color: var(--text-primary);
+  font-size: 13px;
+}
+
+.suggestion-text-sub {
+  font-size: 11.5px;
+  color: var(--text-secondary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+
+

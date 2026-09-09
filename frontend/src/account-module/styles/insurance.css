@@ -1,0 +1,741 @@
+/* ==========================================================================
+   GigSevak Worker Insurance Status & Apply for Insurance Styles
+   SIH26089 – Cooperative Gig Services Platform for Household & Community Services
+   Brand Color: rgb(166, 102, 102)
+   Zero Emojis - Professional Line UI & Accessible Forms
+   ========================================================================== */
+
+#view-insurance,
+#view-apply-insurance {
+  display: none;
+  min-height: 100vh;
+  background-color: var(--bg-app);
+  padding-bottom: 120px;
+}
+
+#view-insurance.active,
+#view-apply-insurance.active {
+  display: block;
+}
+
+/* --------------------------------------------------------------------------
+   Page Header with Back Arrow
+   -------------------------------------------------------------------------- */
+.insurance-header {
+  position: relative;
+  top: auto;
+  z-index: 10;
+  background-color: var(--bg-card);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-lg, 14px);
+  padding: 16px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  box-shadow: var(--shadow-sm);
+  margin-top: 4px;
+  margin-bottom: 14px;
+}
+
+.insurance-header-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.insurance-header-title {
+  font-size: 18px;
+  font-weight: 800;
+  color: var(--text-primary);
+  letter-spacing: -0.3px;
+  margin: 0;
+}
+
+/* --------------------------------------------------------------------------
+   Container & Layout
+   -------------------------------------------------------------------------- */
+.insurance-container {
+  width: 100%;
+  max-width: 560px;
+  margin: 0 auto;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+@media (min-width: 1024px) {
+  .insurance-container {
+    max-width: 780px;
+    padding: 28px 24px;
+    gap: 22px;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   Header Card (Title + Subtitle)
+   -------------------------------------------------------------------------- */
+.insurance-intro-card {
+  background-color: var(--bg-card);
+  border-radius: var(--radius-lg);
+  padding: 20px 22px;
+  border: 1px solid var(--border-light);
+  box-shadow: var(--shadow-sm);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.insurance-page-heading {
+  font-size: 20px;
+  font-weight: 800;
+  color: var(--text-primary);
+  margin: 0;
+  letter-spacing: -0.3px;
+}
+
+.insurance-page-desc {
+  font-size: 13.5px;
+  color: var(--text-secondary);
+  line-height: 1.55;
+  margin: 0;
+}
+
+/* --------------------------------------------------------------------------
+   Question Card: Do you currently have any insurance?
+   -------------------------------------------------------------------------- */
+.insurance-question-card {
+  background-color: var(--bg-card);
+  border-radius: var(--radius-lg);
+  padding: 22px;
+  border: 1px solid var(--border-light);
+  box-shadow: var(--shadow-sm);
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.insurance-question-title {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.insurance-radio-group {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.insurance-radio-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 18px;
+  border-radius: var(--radius-md);
+  border: 1.5px solid var(--border-light);
+  background-color: var(--bg-card);
+  color: var(--text-primary);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  user-select: none;
+}
+
+.insurance-radio-label:hover {
+  border-color: rgba(166, 102, 102, 0.4);
+  background-color: var(--primary-light);
+}
+
+.insurance-radio-input {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 18px;
+  height: 18px;
+  border: 2px solid var(--border-light);
+  border-radius: 50%;
+  outline: none;
+  cursor: pointer;
+  position: relative;
+  transition: border-color var(--transition-fast);
+  margin: 0;
+  background-color: var(--bg-card);
+}
+
+.insurance-radio-input:checked {
+  border-color: rgb(166, 102, 102);
+}
+
+.insurance-radio-input:checked::after {
+  content: '';
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background-color: rgb(166, 102, 102);
+}
+
+.insurance-radio-label.is-selected {
+  border-color: rgb(166, 102, 102);
+  background-color: var(--primary-light);
+  color: rgb(166, 102, 102);
+}
+
+/* --------------------------------------------------------------------------
+   NO Insurance Card / Call-to-Action
+   -------------------------------------------------------------------------- */
+.no-insurance-card {
+  background-color: var(--bg-card);
+  border-radius: var(--radius-lg);
+  padding: 28px 24px;
+  border: 1px solid var(--border-light);
+  box-shadow: var(--shadow-sm);
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  align-items: flex-start;
+}
+
+.no-insurance-title {
+  font-size: 17px;
+  font-weight: 800;
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.no-insurance-desc {
+  font-size: 14px;
+  color: var(--text-secondary);
+  line-height: 1.6;
+  margin: 0;
+}
+
+.btn-primary-brand {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  background-color: rgb(166, 102, 102);
+  color: #FFFFFF;
+  border: none;
+  border-radius: var(--radius-md);
+  padding: 13px 24px;
+  font-size: 14.5px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background-color var(--transition-fast), transform 0.12s ease;
+  text-decoration: none;
+}
+
+.btn-primary-brand:hover {
+  background-color: rgb(148, 88, 88);
+}
+
+.btn-primary-brand:active {
+  transform: scale(0.99);
+}
+
+/* --------------------------------------------------------------------------
+   YES: Insurance Details Form Card
+   -------------------------------------------------------------------------- */
+.insurance-form-card {
+  background-color: var(--bg-card);
+  border-radius: var(--radius-lg);
+  padding: 24px 22px;
+  border: 1px solid var(--border-light);
+  box-shadow: var(--shadow-sm);
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  animation: fadeIn 0.25s ease-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.insurance-section-title {
+  font-size: 16px;
+  font-weight: 800;
+  color: var(--text-primary);
+  margin: 0;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--border-subtle);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.insurance-section-title svg {
+  color: rgb(166, 102, 102);
+}
+
+/* --------------------------------------------------------------------------
+   Form Grid & Fields
+   -------------------------------------------------------------------------- */
+.insurance-form-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.insurance-grid-2col {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+@media (min-width: 768px) {
+  .insurance-grid-2col {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 18px;
+  }
+}
+
+.form-field-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.form-field-label {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-secondary);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.form-field-label .required-star {
+  color: rgb(166, 102, 102);
+  margin-left: 2px;
+}
+
+.form-field-input,
+.form-field-select {
+  width: 100%;
+  border: 1.5px solid var(--border-light);
+  border-radius: var(--radius-sm);
+  padding: 11px 14px;
+  font-family: inherit;
+  font-size: 14px;
+  background-color: var(--bg-card);
+  color: var(--text-primary);
+  outline: none;
+  transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+.form-field-input:focus,
+.form-field-select:focus {
+  border-color: rgb(166, 102, 102);
+  box-shadow: 0 0 0 3px rgba(166, 102, 102, 0.15);
+}
+
+.field-helper-note {
+  font-size: 11.5px;
+  color: var(--text-tertiary);
+  margin-top: 2px;
+}
+
+/* Privacy Mask Indicator */
+.policy-mask-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 4px;
+  padding: 6px 10px;
+  background-color: var(--bg-subtle);
+  border-radius: var(--radius-xs);
+  font-size: 12px;
+}
+
+.mask-label {
+  color: var(--text-secondary);
+  font-weight: 600;
+}
+
+.mask-preview {
+  font-family: monospace;
+  font-weight: 700;
+  color: var(--text-primary);
+  letter-spacing: 1px;
+}
+
+/* --------------------------------------------------------------------------
+   8. What does it cover? (Multi-select Checkboxes)
+   -------------------------------------------------------------------------- */
+.coverage-checkbox-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 10px;
+  margin-top: 4px;
+}
+
+@media (min-width: 640px) {
+  .coverage-checkbox-grid {
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+}
+
+.coverage-checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  border-radius: var(--radius-sm);
+  border: 1.5px solid var(--border-light);
+  background-color: var(--bg-card);
+  color: var(--text-primary);
+  font-size: 13.5px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  user-select: none;
+}
+
+.coverage-checkbox-label:hover {
+  border-color: rgba(166, 102, 102, 0.35);
+  background-color: var(--primary-light);
+}
+
+.coverage-checkbox-input {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 18px;
+  height: 18px;
+  border: 2px solid var(--border-light);
+  border-radius: 4px;
+  outline: none;
+  cursor: pointer;
+  position: relative;
+  background-color: var(--bg-card);
+  transition: all var(--transition-fast);
+  flex-shrink: 0;
+  margin: 0;
+}
+
+.coverage-checkbox-input:checked {
+  background-color: rgb(166, 102, 102);
+  border-color: rgb(166, 102, 102);
+}
+
+.coverage-checkbox-input:checked::after {
+  content: '';
+  position: absolute;
+  left: 5px;
+  top: 2px;
+  width: 5px;
+  height: 9px;
+  border: solid #FFFFFF;
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg);
+}
+
+.coverage-checkbox-label.is-checked {
+  border-color: rgb(166, 102, 102);
+  background-color: var(--primary-light);
+}
+
+.coverage-other-input-wrap {
+  margin-top: 10px;
+  animation: fadeIn 0.2s ease-out;
+}
+
+/* --------------------------------------------------------------------------
+   9. Upload Policy Document
+   -------------------------------------------------------------------------- */
+.upload-dropzone {
+  border: 2px dashed var(--border-light);
+  border-radius: var(--radius-md);
+  padding: 24px 20px;
+  text-align: center;
+  background-color: var(--bg-subtle);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.upload-dropzone:hover {
+  border-color: rgb(166, 102, 102);
+  background-color: var(--primary-light);
+}
+
+.upload-icon-circle {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background-color: var(--bg-card);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: rgb(166, 102, 102);
+  border: 1px solid var(--border-light);
+}
+
+.upload-text-cta {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.upload-hint-types {
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+.uploaded-file-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  background-color: var(--bg-subtle);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-sm);
+  margin-top: 8px;
+}
+
+.file-info-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  overflow: hidden;
+}
+
+.file-icon {
+  color: rgb(166, 102, 102);
+  flex-shrink: 0;
+}
+
+.file-name-text {
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.btn-remove-file {
+  background: none;
+  border: none;
+  color: var(--status-danger);
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: var(--radius-xs);
+  transition: background-color var(--transition-fast);
+  flex-shrink: 0;
+}
+
+.btn-remove-file:hover {
+  background-color: var(--status-danger-bg);
+}
+
+/* --------------------------------------------------------------------------
+   Verification Status Card (State 1: Verified, State 2: Self-Declared)
+   -------------------------------------------------------------------------- */
+.verification-status-box {
+  border-radius: var(--radius-md);
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  border: 1px solid transparent;
+}
+
+.verification-status-box.state-verified {
+  background-color: #EAF7ED;
+  border-color: rgba(22, 163, 74, 0.25);
+}
+
+.verification-status-box.state-self-declared {
+  background-color: #FFF7ED;
+  border-color: rgba(234, 88, 12, 0.25);
+}
+
+[data-theme="dark"] .verification-status-box.state-verified {
+  background-color: rgba(22, 163, 74, 0.12);
+  border-color: rgba(22, 163, 74, 0.35);
+}
+
+[data-theme="dark"] .verification-status-box.state-self-declared {
+  background-color: rgba(234, 88, 12, 0.12);
+  border-color: rgba(234, 88, 12, 0.35);
+}
+
+.status-header-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.status-badge-indicator {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13.5px;
+  font-weight: 800;
+}
+
+.status-badge-indicator.text-verified {
+  color: #16A34A;
+}
+
+.status-badge-indicator.text-self-declared {
+  color: #C2410C;
+}
+
+[data-theme="dark"] .status-badge-indicator.text-verified {
+  color: #4ADE80;
+}
+
+[data-theme="dark"] .status-badge-indicator.text-self-declared {
+  color: #FB923C;
+}
+
+.status-dot-circle {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+}
+
+.status-dot-circle.bg-verified {
+  background-color: #16A34A;
+}
+
+.status-dot-circle.bg-self-declared {
+  background-color: #EA580C;
+}
+
+.status-desc-text {
+  font-size: 12.5px;
+  color: var(--text-secondary);
+  line-height: 1.5;
+  margin: 0;
+}
+
+/* --------------------------------------------------------------------------
+   Action Controls (Save Changes / Submit)
+   -------------------------------------------------------------------------- */
+.insurance-actions-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 10px;
+}
+
+@media (min-width: 768px) {
+  .insurance-actions-wrap {
+    flex-direction: row;
+    justify-content: flex-start;
+  }
+}
+
+.btn-save-insurance {
+  width: 100%;
+  min-height: 48px;
+  background-color: rgb(166, 102, 102);
+  color: #FFFFFF;
+  border: none;
+  border-radius: var(--radius-md);
+  padding: 13px 28px;
+  font-size: 14.5px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background-color var(--transition-fast), transform 0.12s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+@media (min-width: 768px) {
+  .btn-save-insurance {
+    width: auto;
+    min-width: 220px;
+  }
+}
+
+.btn-save-insurance:hover {
+  background-color: rgb(148, 88, 88);
+}
+
+.btn-save-insurance:active {
+  transform: scale(0.99);
+}
+
+/* --------------------------------------------------------------------------
+   Apply for Insurance Flow Styles
+   -------------------------------------------------------------------------- */
+.apply-locked-field {
+  background-color: var(--bg-subtle) !important;
+  color: var(--text-secondary) !important;
+  cursor: not-allowed;
+  border-color: var(--border-subtle) !important;
+  font-weight: 600;
+}
+
+.locked-badge-indicator {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11.5px;
+  font-weight: 700;
+  color: var(--status-success);
+  margin-top: 4px;
+}
+
+.application-status-banner {
+  background-color: #E3F2FD;
+  border: 1px solid rgba(21, 101, 192, 0.25);
+  border-radius: var(--radius-md);
+  padding: 16px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+[data-theme="dark"] .application-status-banner {
+  background-color: rgba(21, 101, 192, 0.15);
+  border-color: rgba(21, 101, 192, 0.35);
+}
+
+.application-status-title {
+  font-size: 14.5px;
+  font-weight: 800;
+  color: #1565C0;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+[data-theme="dark"] .application-status-title {
+  color: #64B5F6;
+}
+
+.application-status-desc {
+  font-size: 13px;
+  color: var(--text-secondary);
+  line-height: 1.5;
+  margin: 0;
+}

@@ -1,0 +1,717 @@
+/* ==========================================================================
+   GigSevak Worker Account Page & Desktop Sidebar Navigation Styles
+   SIH26089 – Cooperative Gig Services Platform for Household & Community Services
+   Brand Color: rgb(166, 102, 102)
+   ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   Desktop Left Sidebar Navigation
+   Visible on screens >= 1024px, hidden on mobile/tablet
+   Top-level items strictly 4: Home, Jobs, Voice Assistance, Account
+   -------------------------------------------------------------------------- */
+.desktop-sidebar {
+  display: none;
+}
+
+@media (min-width: 1024px) {
+  .desktop-sidebar {
+    display: flex;
+    flex-direction: column;
+    width: 270px;
+    min-width: 270px;
+    height: 100vh;
+    position: fixed;
+    top: 0;
+    left: 0;
+    background-color: var(--bg-sidebar);
+    border-right: 1px solid var(--sidebar-border);
+    padding: 24px 18px;
+    z-index: 60;
+    box-shadow: 2px 0 12px rgba(0, 0, 0, 0.02);
+    overflow-y: auto;
+  }
+
+  .sidebar-brand-box {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 0 10px 20px 10px;
+    border-bottom: 1px solid var(--border-subtle);
+    margin-bottom: 18px;
+  }
+
+  .sidebar-logo {
+    font-size: 24px;
+    font-weight: 800;
+    letter-spacing: -0.5px;
+    text-decoration: none;
+  }
+
+  .sidebar-logo .brand-gig {
+    color: var(--primary);
+  }
+
+  .sidebar-logo .brand-sevak {
+    color: var(--text-primary);
+  }
+
+  .sidebar-portal-tag {
+    font-size: 11px;
+    font-weight: 700;
+    padding: 2px 7px;
+    border-radius: var(--radius-pill);
+    background-color: var(--primary-light);
+    color: var(--primary);
+    margin-left: auto;
+  }
+
+  .sidebar-menu {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    flex: 1;
+    list-style: none;
+  }
+
+  .sidebar-nav-link {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 11px 14px;
+    border-radius: var(--radius-md);
+    color: var(--text-secondary);
+    font-size: 14.5px;
+    font-weight: 600;
+    text-decoration: none;
+    transition: var(--transition-fast);
+    cursor: pointer;
+    width: 100%;
+    border: none;
+    background: none;
+    text-align: left;
+  }
+
+  .sidebar-nav-link svg {
+    width: 20px;
+    height: 20px;
+    color: var(--text-tertiary);
+    transition: var(--transition-fast);
+    flex-shrink: 0;
+  }
+
+  .sidebar-nav-link:hover {
+    background-color: var(--bg-subtle);
+    color: var(--text-primary);
+  }
+
+  .sidebar-nav-link:hover svg {
+    color: var(--primary);
+  }
+
+  .sidebar-nav-link.active {
+    background-color: var(--primary-light);
+    color: var(--primary);
+    font-weight: 700;
+  }
+
+  .sidebar-nav-link.active svg {
+    color: var(--primary);
+  }
+
+  .sidebar-account-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+  }
+
+  .sidebar-chevron {
+    font-size: 12px;
+    transition: transform var(--transition-fast);
+    margin-left: auto;
+  }
+
+  .sidebar-account-toggle.expanded .sidebar-chevron {
+    transform: rotate(180deg);
+  }
+
+  /* Expandable Account Submenu */
+  .sidebar-submenu {
+    display: none;
+    flex-direction: column;
+    gap: 2px;
+    list-style: none;
+    margin-left: 20px;
+    padding-left: 12px;
+    border-left: 2px solid var(--border-light);
+    margin-top: 4px;
+    margin-bottom: 6px;
+  }
+
+  .sidebar-submenu.expanded {
+    display: flex;
+  }
+
+  .sidebar-submenu-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 7px 10px;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-secondary);
+    border-radius: var(--radius-xs);
+    text-decoration: none;
+    transition: var(--transition-fast);
+    cursor: pointer;
+    background: none;
+    border: none;
+    width: 100%;
+    text-align: left;
+  }
+
+  .sidebar-submenu-item:hover {
+    color: var(--primary);
+    background-color: var(--primary-light);
+  }
+
+  .sidebar-submenu-badge {
+    font-size: 11px;
+    font-weight: 700;
+    padding: 1px 6px;
+    border-radius: var(--radius-pill);
+  }
+
+  .sidebar-submenu-badge.inactive {
+    color: var(--status-danger);
+    background-color: var(--status-danger-bg);
+  }
+
+  .sidebar-submenu-badge.verified {
+    color: var(--status-success);
+    background-color: var(--status-success-bg);
+  }
+
+  /* Worker mini status card in sidebar bottom */
+  .sidebar-worker-card {
+    padding: 12px 14px;
+    border-radius: var(--radius-md);
+    background-color: var(--bg-subtle);
+    border: 1px solid var(--border-light);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 16px;
+  }
+
+  .sidebar-worker-thumb {
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 1.5px solid var(--primary-border);
+  }
+
+  .sidebar-worker-info {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+  }
+
+  .sidebar-worker-name {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--text-primary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .sidebar-worker-status {
+    font-size: 11px;
+    color: var(--status-success);
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+
+  .sidebar-worker-status::before {
+    content: '';
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background-color: var(--status-success);
+  }
+
+  /* Desktop layout wrapper when sidebar is visible */
+  .app-container {
+    margin-left: 270px !important;
+    max-width: calc(100% - 270px) !important;
+    min-height: 100vh;
+    box-shadow: none !important;
+  }
+
+  /* Hide bottom navigation on desktop screens */
+  .bottom-nav {
+    display: none !important;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   Account Page View Container
+   -------------------------------------------------------------------------- */
+#view-account {
+  display: none;
+  min-height: auto;
+  background-color: transparent;
+  padding-bottom: 40px;
+}
+
+#view-account.active {
+  display: block;
+}
+
+.account-page-wrap {
+  width: 100%;
+  max-width: 520px;
+  margin: 0 auto;
+  padding: 8px 16px 24px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+@media (min-width: 1024px) {
+  .account-page-wrap {
+    max-width: 680px;
+    padding: 12px 24px 32px 24px;
+    gap: 20px;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   Account Page Header
+   -------------------------------------------------------------------------- */
+.account-top-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  background-color: var(--bg-card);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-xl, 16px);
+  position: relative;
+  top: auto;
+  z-index: 10;
+  box-shadow: var(--shadow-sm);
+  margin-top: 4px;
+}
+
+.account-header-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.account-header-title {
+  font-size: 18px;
+  font-weight: 800;
+  color: var(--text-primary);
+  letter-spacing: -0.3px;
+}
+
+/* --------------------------------------------------------------------------
+   1. Worker Profile Header Section
+   -------------------------------------------------------------------------- */
+.worker-profile-card {
+  background-color: var(--bg-card);
+  border-radius: var(--radius-xl);
+  padding: 24px 20px;
+  border: 1px solid var(--border-light);
+  box-shadow: var(--shadow-sm);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  position: relative;
+}
+
+.profile-avatar-container {
+  position: relative;
+  width: 82px;
+  height: 82px;
+  margin-bottom: 12px;
+}
+
+.profile-avatar-img {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 3px solid var(--primary-border);
+  box-shadow: 0 4px 12px rgba(166, 102, 102, 0.15);
+}
+
+.profile-verified-badge {
+  position: absolute;
+  bottom: 0;
+  right: 2px;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background-color: var(--status-success);
+  color: #FFFFFF;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid var(--bg-card);
+}
+
+.profile-worker-name {
+  font-size: 20px;
+  font-weight: 800;
+  color: var(--text-primary);
+  letter-spacing: -0.3px;
+}
+
+.profile-phone-number {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  margin-top: 3px;
+  margin-bottom: 10px;
+}
+
+.btn-edit-profile {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  border-radius: var(--radius-pill);
+  background-color: var(--primary-light);
+  color: var(--primary);
+  font-size: 12.5px;
+  font-weight: 700;
+  border: 1px solid var(--primary-border);
+  transition: var(--transition-fast);
+  cursor: pointer;
+  text-decoration: none;
+}
+
+.btn-edit-profile:hover {
+  background-color: var(--primary-subtle);
+  transform: translateY(-1px);
+}
+
+/* --------------------------------------------------------------------------
+   Clickable List Rows & Cards
+   -------------------------------------------------------------------------- */
+.account-group-card {
+  background-color: var(--bg-card);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border-light);
+  box-shadow: var(--shadow-sm);
+  overflow: hidden;
+}
+
+.account-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 15px 18px;
+  background-color: var(--bg-card);
+  color: var(--text-primary);
+  border: none;
+  width: 100%;
+  text-align: left;
+  cursor: pointer;
+  transition: var(--transition-fast);
+  border-bottom: 1px solid var(--border-subtle);
+  text-decoration: none;
+}
+
+.account-row:last-child {
+  border-bottom: none;
+}
+
+.account-row:hover {
+  background-color: var(--bg-card-hover);
+}
+
+.account-row:active {
+  background-color: var(--bg-subtle);
+}
+
+.account-row-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.account-row-icon {
+  width: 22px;
+  height: 22px;
+  color: var(--primary);
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.account-row-label {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.account-row-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--text-tertiary);
+}
+
+.account-chevron {
+  font-size: 15px;
+  color: var(--text-tertiary);
+}
+
+/* --------------------------------------------------------------------------
+   4. Theme Selection Row & Dropdown
+   -------------------------------------------------------------------------- */
+.theme-row-wrapper {
+  position: relative;
+  background-color: var(--bg-card);
+}
+
+.theme-dropdown-menu {
+  display: none;
+  background-color: var(--bg-card);
+  border-top: 1px solid var(--border-subtle);
+  padding: 6px 18px 12px 50px;
+  animation: themeSlide 0.18s ease-out;
+}
+
+.theme-dropdown-menu.open {
+  display: block;
+}
+
+@keyframes themeSlide {
+  0% { opacity: 0; transform: translateY(-6px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+
+.theme-option-btn {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 10px 12px;
+  border-radius: var(--radius-sm);
+  color: var(--text-primary);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: var(--transition-fast);
+}
+
+.theme-option-btn:hover {
+  background-color: var(--bg-subtle);
+}
+
+.theme-radio-dot {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  border: 2px solid var(--border-light);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: var(--transition-fast);
+}
+
+.theme-option-btn.selected .theme-radio-dot {
+  border-color: var(--primary);
+}
+
+.theme-option-btn.selected .theme-radio-dot::after {
+  content: '';
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background-color: var(--primary);
+}
+
+.theme-option-btn.selected {
+  color: var(--primary);
+  font-weight: 700;
+}
+
+/* --------------------------------------------------------------------------
+   5. Work Statistics Section
+   -------------------------------------------------------------------------- */
+.work-stats-card {
+  background-color: var(--bg-card);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border-light);
+  box-shadow: var(--shadow-sm);
+  padding: 16px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.stats-item-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.stats-item-label {
+  font-size: 14.5px;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+.stats-item-value {
+  font-size: 17px;
+  font-weight: 800;
+  color: var(--text-primary);
+  letter-spacing: -0.2px;
+}
+
+.stats-divider {
+  height: 1px;
+  background-color: var(--border-subtle);
+  width: 100%;
+}
+
+/* --------------------------------------------------------------------------
+   7 & 8. Insurance & KYC Status Cards
+   -------------------------------------------------------------------------- */
+.status-row-block {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  padding: 14px 18px;
+  border-bottom: 1px solid var(--border-subtle);
+  background-color: var(--bg-card);
+  cursor: pointer;
+  transition: var(--transition-fast);
+}
+
+.status-row-block:last-child {
+  border-bottom: none;
+}
+
+.status-row-block:hover {
+  background-color: var(--bg-card-hover);
+}
+
+.status-row-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.status-indicator-subrow {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 3px;
+  padding-left: 34px;
+  background: none !important;
+  background-color: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.status-indicator-subrow.insurance {
+  color: #870404 !important;
+}
+
+.status-dot-indicator.insurance {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background-color: #870404;
+  box-shadow: none;
+  flex-shrink: 0;
+  display: inline-block;
+}
+
+.status-indicator-subrow.kyc {
+  color: #01471F !important;
+}
+
+.status-dot-indicator.kyc {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background-color: #01471F;
+  box-shadow: none;
+  flex-shrink: 0;
+  display: inline-block;
+}
+
+.status-indicator-subrow.inactive {
+  color: #870404 !important;
+}
+
+.status-dot-inactive {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background-color: #870404;
+  box-shadow: none;
+  flex-shrink: 0;
+  display: inline-block;
+}
+
+.status-indicator-subrow.verified {
+  color: #01471F !important;
+}
+
+.status-dot-verified {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background-color: #01471F;
+  box-shadow: none;
+  flex-shrink: 0;
+  display: inline-block;
+}
+
+/* --------------------------------------------------------------------------
+   9. Logout Row
+   -------------------------------------------------------------------------- */
+.logout-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 15px 18px;
+  background-color: var(--bg-card);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border-light);
+  box-shadow: var(--shadow-sm);
+  color: var(--status-danger);
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: var(--transition-fast);
+  width: 100%;
+}
+
+.logout-row:hover {
+  background-color: var(--status-danger-bg);
+  border-color: rgba(220, 38, 38, 0.3);
+}
+
+.logout-row svg {
+  width: 20px;
+  height: 20px;
+  color: var(--status-danger);
+}

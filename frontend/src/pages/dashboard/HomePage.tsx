@@ -2,6 +2,10 @@ import React, { useState } from 'react';
 import { MOCK_JOBS } from '../../data/mockJobs';
 import { WorkCard } from '../../components/dashboard/WorkCard';
 import { JobDetailsModal } from '../../components/dashboard/JobDetailsModal';
+import { OtpVerificationModal } from '../../components/dashboard/OtpVerificationModal';
+import { BeforeWorkModal } from '../../components/dashboard/BeforeWorkModal';
+import { WorkSessionModal } from '../../components/dashboard/WorkSessionModal';
+import { CompleteWorkModal } from '../../components/dashboard/CompleteWorkModal';
 import { Calendar, Briefcase, CheckCircle2 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import type { JobItem } from '../../types/dashboard';
@@ -20,8 +24,16 @@ export const HomePage: React.FC<HomePageProps> = ({
   const activeLangCode = i18n.language || localStorage.getItem('workerLanguage') || 'en';
 
   const [selectedJob, setSelectedJob] = useState<JobItem | null>(null);
+  const [otpJob, setOtpJob] = useState<JobItem | null>(null);
+  const [beforeWorkJob, setBeforeWorkJob] = useState<JobItem | null>(null);
+  const [activeSessionJob, setActiveSessionJob] = useState<JobItem | null>(null);
+  const [completeWorkJob, setCompleteWorkJob] = useState<JobItem | null>(null);
   const [localJobs, setLocalJobs] = useState<JobItem[]>(jobsList);
   const [notification, setNotification] = useState<string | null>(null);
+
+  React.useEffect(() => {
+    setLocalJobs(jobsList);
+  }, [jobsList]);
 
   const workerName = (() => {
     const user = authService.getCurrentUser();
@@ -29,7 +41,7 @@ export const HomePage: React.FC<HomePageProps> = ({
       const clean = user.name.replace(/\bpartner\b/gi, '').trim();
       if (clean) return clean;
     }
-    return 'GigSevak';
+    return 'Rajesh';
   })();
 
   const handleUpdate = (updatedJob: JobItem) => {
@@ -39,50 +51,134 @@ export const HomePage: React.FC<HomePageProps> = ({
     if (selectedJob && selectedJob.id === updatedJob.id) {
       setSelectedJob(updatedJob);
     }
+    if (activeSessionJob && activeSessionJob.id === updatedJob.id) {
+      setActiveSessionJob(updatedJob);
+    }
+    if (beforeWorkJob && beforeWorkJob.id === updatedJob.id) {
+      setBeforeWorkJob(updatedJob);
+    }
     if (onUpdateJob) {
       onUpdateJob(updatedJob);
     }
   };
 
+  // =========================================================================
+  // FLOW 1: REACHED THE LOCATION FLOW
+  // Reached Location -> 4-digit OTP (1234) -> Before-Work Photo -> Start Work -> Countdown Timer & SOS
+  // =========================================================================
+
+  // Step 1: Worker clicks "Reached the Location"
   const handleToggleReached = (e: React.MouseEvent, job: JobItem) => {
     e.stopPropagation();
-    const nextReached = !job.isLocationReached;
-    const updated = { ...job, isLocationReached: nextReached };
-    handleUpdate(updated);
-
-    if (nextReached) {
-      setNotification(`✓ ${t('dashboard.locationReached', 'Location Reached')}: "${job.serviceName}"`);
-    } else {
-      setNotification(`Location unreached for "${job.serviceName}"`);
+    if (job.isLocationReached) {
+      if (!job.workStarted) {
+        setBeforeWorkJob(job);
+      } else if (job.status !== 'completed') {
+        setActiveSessionJob(job);
+      }
+      return;
     }
+    // Opens "Verify Location" popup (4-digit OTP, mock: 1234)
+    setOtpJob(job);
+  };
+
+  // Step 1 Success: Location OTP (1234) verified -> open Before-Work Photo interface
+  const handleLocationOtpSuccess = () => {
+    if (!otpJob) return;
+    const updated: JobItem = { ...otpJob, isLocationReached: true, locationVerified: true };
+    handleUpdate(updated);
+    setOtpJob(null);
+    // Directly proceed to Step 2: Before-Work Photo interface ("Before You Start")
+    setBeforeWorkJob(updated);
+  };
+
+  // Step 2 Success: Before-work photo captured -> Worker clicks "Start Work"
+  const handleStartWorkSuccess = (beforeWorkPhoto: string) => {
+    if (!beforeWorkJob) return;
+    const now = Date.now();
+    const updated: JobItem = {
+      ...beforeWorkJob,
+      beforeWorkPhoto,
+      workStarted: true,
+      workStartTime: now,
+      status: 'in_progress',
+    };
+    handleUpdate(updated);
+    setBeforeWorkJob(null);
+    // Launch Step 3: Dedicated Work Session with live Stopwatch & SOS
+    setActiveSessionJob(updated);
+    setNotification(`✓ Work session started for "${beforeWorkJob.serviceName}"`);
     setTimeout(() => setNotification(null), 3000);
   };
 
+  // =========================================================================
+  // FLOW 2: COMPLETED BUTTON FLOW (COMPLETELY SEPARATE)
+  // Completed Click -> Proof-of-Work Photo + 6-Digit OTP (123456) -> Verify & Complete -> Job Completed
+  // =========================================================================
+
+  // Step 1: Worker clicks "Completed"
   const handleToggleCompleted = (e: React.MouseEvent, job: JobItem) => {
     e.stopPropagation();
-    const nextStatus = job.status === 'completed' ? 'accepted' : 'completed';
-    const updated = { ...job, status: nextStatus as 'accepted' | 'completed' };
-    handleUpdate(updated);
-
-    if (nextStatus === 'completed') {
-      setNotification(`✓ ${t('dashboard.taskCompleted', 'Task Marked as Completed')}: "${job.serviceName}"`);
-    } else {
-      setNotification(`Marked "${job.serviceName}" as Incomplete`);
+    if (job.status === 'completed') {
+      return;
     }
+    // IMMEDIATELY open "Complete Your Work" popup (Proof Photo + 6-digit Customer OTP 123456)
+    setCompleteWorkJob(job);
+  };
+
+  // Step 2 Success: 6-digit OTP (123456) + Proof-of-work photo verified -> mark job completed
+  const handleCompleteWorkSuccess = (proofPhoto: string) => {
+    if (!completeWorkJob) return;
+    const completionTime = Date.now();
+    const startMs = completeWorkJob.workStartTime || completionTime;
+    const totalSecs = Math.max(0, Math.floor((completionTime - startMs) / 1000));
+    const hrs = Math.floor(totalSecs / 3600);
+    const mins = Math.floor((totalSecs % 3600) / 60);
+    const secs = totalSecs % 60;
+    const actualDurationText = `${hrs.toString().padStart(2, '0')}:${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+
+    const nowFormatted = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    const updated: JobItem = {
+      ...completeWorkJob,
+      status: 'completed',
+      completionProofPhoto: proofPhoto,
+      afterWorkPhoto: proofPhoto,
+      completedAt: nowFormatted,
+      completionTime,
+      actualWorkDuration: actualDurationText,
+      workCompleted: true,
+      completionVerified: true,
+    };
+    handleUpdate(updated);
+    setNotification('✓ Work completed successfully');
+    setCompleteWorkJob(null);
+    setActiveSessionJob(null);
     setTimeout(() => setNotification(null), 3000);
   };
 
-  // Filter accepted & completed jobs scheduled for today
+  // Card click behavior
+  const handleCardClick = (job: JobItem) => {
+    if (job.workStarted && job.status !== 'completed') {
+      setActiveSessionJob(job);
+    } else {
+      setSelectedJob(job);
+    }
+  };
+
+  // Filter accepted, in_progress & completed jobs scheduled for today
   const todayJobs = localJobs.filter(
-    (job: JobItem) => (job.status === 'accepted' || job.status === 'completed') && (job.date === 'today' || !job.date)
+    (job: JobItem) =>
+      (job.status === 'accepted' || job.status === 'in_progress' || job.status === 'completed') &&
+      (job.date === 'today' || !job.date)
   );
 
   const completedCount = todayJobs.filter((job) => job.status === 'completed').length;
+  const inProgressCount = todayJobs.filter((job) => job.status === 'in_progress' || (job.workStarted && job.status !== 'completed')).length;
 
-  // Dynamic formatted date localized to active language
+  // Dynamic formatted date
   const today = new Date();
   const dateFormatted = new Intl.DateTimeFormat(
-    activeLangCode === 'hi' ? 'hi-IN' : activeLangCode === 'pa' ? 'pa-IN' : 'en-IN',
+    activeLangCode === 'hi' ? 'hi-IN' : activeLangCode === 'pa' ? 'pa-IN' : 'en-US',
     {
       weekday: 'long',
       month: 'short',
@@ -101,9 +197,7 @@ export const HomePage: React.FC<HomePageProps> = ({
           </div>
 
           <h1 className="text-2xl sm:text-3xl font-extrabold text-neutral-dark tracking-tight">
-            {workerName === 'GigSevak'
-              ? t('dashboard.welcome', 'Welcome to GigSevak!')
-              : t('dashboard.welcomeWorker', { name: workerName, defaultValue: `Welcome, ${workerName}!` })}
+            {t('dashboard.welcomeWorker', { name: workerName, defaultValue: `Welcome, ${workerName}!` })}
           </h1>
 
           {/* Summary Badges */}
@@ -117,9 +211,18 @@ export const HomePage: React.FC<HomePageProps> = ({
               <div className="text-xl font-bold text-[#01471f] mt-0.5">{completedCount} {t('dashboard.of', 'of')} {todayJobs.length}</div>
             </div>
             <div className="hidden sm:block bg-white/90 backdrop-blur-xs rounded-2xl p-3 border border-neutral-100 shadow-xs">
-              <div className="text-xs text-neutral-muted font-medium">{t('dashboard.scheduleStatus', 'Schedule Status')}</div>
+              <div className="text-xs text-neutral-muted font-medium">{t('dashboard.workStatus', 'Work Status')}</div>
               <div className="text-sm font-bold text-emerald-600 mt-1 flex items-center gap-1">
-                <CheckCircle2 className="w-4 h-4" /> {t('dashboard.activeDay', 'Active Day')}
+                {inProgressCount > 0 ? (
+                  <span className="flex items-center gap-1.5 text-brand-primary font-bold">
+                    <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                    {inProgressCount} {t('dashboard.inProgress', 'in Progress')}
+                  </span>
+                ) : (
+                  <span className="flex items-center gap-1">
+                    <CheckCircle2 className="w-4 h-4" /> {t('dashboard.activeDay', 'Active Day')}
+                  </span>
+                )}
               </div>
             </div>
           </div>
@@ -161,7 +264,7 @@ export const HomePage: React.FC<HomePageProps> = ({
           </span>
         </div>
 
-        {/* Work Cards List */}
+        {/* Work Cards List with Reached, Completed, and Details Buttons */}
         <div className="grid grid-cols-1 gap-3.5">
           {todayJobs.map((job: JobItem) => (
             <WorkCard
@@ -171,7 +274,8 @@ export const HomePage: React.FC<HomePageProps> = ({
               showCompleteCheckbox={true}
               onToggleReached={handleToggleReached}
               onToggleCompleted={handleToggleCompleted}
-              onClick={() => setSelectedJob(job)}
+              onDetails={() => setSelectedJob(job)}
+              onClick={() => handleCardClick(job)}
             />
           ))}
         </div>
@@ -185,6 +289,55 @@ export const HomePage: React.FC<HomePageProps> = ({
           onUpdateJob={handleUpdate}
         />
       )}
+
+      {/* ================================================================= */}
+      {/* FLOW 1 POPUPS: Location OTP -> Before-Work Photo -> Work Session  */}
+      {/* ================================================================= */}
+
+      {/* 1. Location OTP Verification (4-Digit OTP, Mock: 1234) */}
+      <OtpVerificationModal
+        isOpen={!!otpJob}
+        onClose={() => setOtpJob(null)}
+        onVerifySuccess={handleLocationOtpSuccess}
+        mockOtp="1234"
+        serviceName={otpJob?.serviceName}
+        clientName={otpJob?.clientName}
+      />
+
+      {/* 2. Before-Work Photo Modal ("Before You Start" -> "Start Work") */}
+      <BeforeWorkModal
+        isOpen={!!beforeWorkJob}
+        job={beforeWorkJob}
+        onClose={() => setBeforeWorkJob(null)}
+        onStartWork={handleStartWorkSuccess}
+      />
+
+      {/* 3. Work Session Interface (Live Stopwatch + SOS) */}
+      <WorkSessionModal
+        isOpen={!!activeSessionJob}
+        job={activeSessionJob}
+        onClose={() => setActiveSessionJob(null)}
+        onCompleteClick={() => {
+          if (activeSessionJob) {
+            setCompleteWorkJob(activeSessionJob);
+          }
+        }}
+      />
+
+      {/* ================================================================= */}
+      {/* FLOW 2 POPUP: Complete Your Work (Proof Photo + 6-Digit OTP 123456) */}
+      {/* ================================================================= */}
+
+      <CompleteWorkModal
+        isOpen={!!completeWorkJob}
+        onClose={() => setCompleteWorkJob(null)}
+        onConfirm={handleCompleteWorkSuccess}
+        mockOtp="123456"
+        serviceName={completeWorkJob?.serviceName}
+        clientName={completeWorkJob?.clientName}
+      />
     </div>
   );
 };
+
+export default HomePage;

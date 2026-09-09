@@ -5,34 +5,49 @@ import { JobDetailsModal } from '../../components/dashboard/JobDetailsModal';
 import { Search, CalendarCheck } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import type { JobItem } from '../../types/dashboard';
-import { getLocalizedJob } from '../../utils/localizedJobs';
 
-export const OrdersPage: React.FC = () => {
-  const { t, i18n } = useTranslation();
-  const activeLangCode = i18n.language || localStorage.getItem('workerLanguage') || 'en';
+interface OrdersPageProps {
+  jobsList?: JobItem[];
+  onUpdateJob?: (updatedJob: JobItem) => void;
+}
+
+export const OrdersPage: React.FC<OrdersPageProps> = ({
+  jobsList = MOCK_JOBS,
+  onUpdateJob,
+}) => {
+  const { t } = useTranslation();
   const [searchQuery, setSearchQuery] = useState('');
   const [activeTab, setActiveTab] = useState<'all' | 'scheduled' | 'completed'>('all');
-  const [bookings, setBookings] = useState<JobItem[]>(MOCK_JOBS);
+  const [bookings, setBookings] = useState<JobItem[]>(jobsList);
   const [selectedJob, setSelectedJob] = useState<JobItem | null>(null);
   const [notification, setNotification] = useState<string | null>(null);
 
-  const handleAccept = (_e: React.MouseEvent, job: JobItem) => {
+  React.useEffect(() => {
+    setBookings(jobsList);
+  }, [jobsList]);
+
+  const handleAccept = (job: JobItem, _e?: React.MouseEvent) => {
+    const updated: JobItem = { ...job, status: 'accepted', date: 'today' };
     setBookings((prev) =>
-      prev.map((item) =>
-        item.id === job.id ? { ...item, status: 'accepted' as const } : item
-      )
+      prev.map((item) => (item.id === job.id ? updated : item))
     );
-    setNotification(`✓ ${t('dashboard.accept', 'Accepted')}: "${job.serviceName}" (#${job.id})`);
-    setTimeout(() => setNotification(null), 3000);
+    if (onUpdateJob) onUpdateJob(updated);
+    setNotification(`✓ Accepted "${job.serviceName}" — moved to Today's Work!`);
+    setTimeout(() => setNotification(null), 3500);
+    // Smoothly close details modal after showing the accepted state
+    setTimeout(() => {
+      setSelectedJob((curr) => (curr?.id === job.id ? null : curr));
+    }, 1000);
   };
 
-  const handleDecline = (_e: React.MouseEvent, job: JobItem) => {
+  const handleDecline = (job: JobItem, _e?: React.MouseEvent) => {
+    const updated = { ...job, status: 'declined' as const };
     setBookings((prev) =>
-      prev.map((item) =>
-        item.id === job.id ? { ...item, status: 'declined' as const } : item
-      )
+      prev.map((item) => (item.id === job.id ? updated : item))
     );
-    setNotification(`${t('dashboard.decline', 'Declined')}: "${job.serviceName}" (#${job.id})`);
+    setSelectedJob(updated);
+    if (onUpdateJob) onUpdateJob(updated);
+    setNotification(`Declined booking #${job.id} for ${job.serviceName}`);
     setTimeout(() => setNotification(null), 3000);
   };
 
@@ -44,22 +59,29 @@ export const OrdersPage: React.FC = () => {
     setBookings((prev) =>
       prev.map((item) => (item.id === updatedJob.id ? updatedJob : item))
     );
-    setSelectedJob(updatedJob);
+    if (updatedJob.status === 'accepted') {
+      setTimeout(() => {
+        setSelectedJob(null);
+      }, 1000);
+    } else {
+      setSelectedJob(updatedJob);
+    }
+    if (onUpdateJob) onUpdateJob(updatedJob);
   };
 
-  const filteredJobs = bookings.filter((job: JobItem) => {
-    const loc = getLocalizedJob(job, activeLangCode);
-    const q = searchQuery.toLowerCase();
+  // Accepted & in-progress gigs are active on Today's Work and removed from All Bookings list
+  const incomingBookings = bookings.filter(
+    (job: JobItem) => job.status !== 'accepted' && job.status !== 'in_progress'
+  );
+
+  const filteredJobs = incomingBookings.filter((job: JobItem) => {
     const matchesSearch =
-      job.serviceName.toLowerCase().includes(q) ||
-      loc.serviceName.toLowerCase().includes(q) ||
-      job.clientName.toLowerCase().includes(q) ||
-      loc.clientName.toLowerCase().includes(q) ||
-      job.clientAddress.toLowerCase().includes(q) ||
-      loc.clientAddress.toLowerCase().includes(q);
+      job.serviceName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      job.clientName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      job.clientAddress.toLowerCase().includes(searchQuery.toLowerCase());
 
     if (!matchesSearch) return false;
-    if (activeTab === 'scheduled') return job.status !== 'completed' && job.status !== 'declined';
+    if (activeTab === 'scheduled') return job.status === 'pending' || job.status === 'scheduled';
     if (activeTab === 'completed') return job.status === 'completed';
     return true;
   });
@@ -68,9 +90,10 @@ export const OrdersPage: React.FC = () => {
     <div className="space-y-6">
       {/* Page Header */}
       <div>
-        <h1 className="text-2xl font-extrabold text-neutral-dark">
-          {t('dashboard.allBookings', 'All Bookings')}
-        </h1>
+        <h1 className="text-2xl font-extrabold text-neutral-dark">{t('dashboard.allBookings', 'All Bookings')}</h1>
+        <p className="text-sm text-neutral-muted mt-1">
+          {t('dashboard.allBookingsSub', 'Review incoming customer requests and accept gigs to add them to Today\'s Work.')}
+        </p>
       </div>
 
       {/* Action Notification Toast */}
@@ -108,7 +131,7 @@ export const OrdersPage: React.FC = () => {
                 : 'bg-white text-neutral-600 border border-neutral-200 hover:bg-neutral-50'
             }`}
           >
-            {t('dashboard.filterAll', 'All')} ({bookings.length})
+            {t('dashboard.available', 'Available')} ({incomingBookings.length})
           </button>
           <button
             onClick={() => setActiveTab('scheduled')}
@@ -118,7 +141,7 @@ export const OrdersPage: React.FC = () => {
                 : 'bg-white text-neutral-600 border border-neutral-200 hover:bg-neutral-50'
             }`}
           >
-            {t('dashboard.filterScheduled', 'Active / Scheduled')}
+            {t('dashboard.newRequests', 'New Requests')}
           </button>
           <button
             onClick={() => setActiveTab('completed')}
@@ -133,7 +156,7 @@ export const OrdersPage: React.FC = () => {
         </div>
       </div>
 
-      {/* List of Bookings */}
+      {/* List of Bookings with Accept, Decline, See More Details actions */}
       <div className="space-y-3.5">
         {filteredJobs.length > 0 ? (
           filteredJobs.map((job: JobItem) => (
@@ -141,8 +164,8 @@ export const OrdersPage: React.FC = () => {
               key={job.id}
               job={job}
               showActions={true}
-              onAccept={handleAccept}
-              onDecline={handleDecline}
+              onAccept={(e, j) => handleAccept(j, e)}
+              onDecline={(e, j) => handleDecline(j, e)}
               onDetails={handleDetails}
               onClick={() => setSelectedJob(job)}
             />
@@ -156,14 +179,19 @@ export const OrdersPage: React.FC = () => {
         )}
       </div>
 
-      {/* Job Details Modal */}
+      {/* Job Details Modal - In All Bookings section, shows Accept / Decline buttons */}
       {selectedJob && (
         <JobDetailsModal
           job={selectedJob}
           onClose={() => setSelectedJob(null)}
           onUpdateJob={handleUpdateJob}
+          showBookingActions={true}
+          onAccept={(job) => handleAccept(job)}
+          onDecline={(job) => handleDecline(job)}
         />
       )}
     </div>
   );
 };
+
+export default OrdersPage;
