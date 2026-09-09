@@ -1,45 +1,68 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { AuthLayout } from '../../components/auth/AuthLayout';
 import { PhoneInput } from '../../components/auth/PhoneInput';
 import { AuthButton } from '../../components/auth/AuthButton';
+import { SpeakerButton } from '../../components/common/SpeakerButton';
+import { sendOtpSms } from '../../services/firebaseAuth';
 
 export const WorkerLogin: React.FC = () => {
   const navigate = useNavigate();
+  const { t, i18n } = useTranslation();
+  const activeLangCode = i18n.language || localStorage.getItem('workerLanguage') || 'en';
+
   const [phoneNumber, setPhoneNumber] = useState('');
   const [error, setError] = useState<string | undefined>();
   const [isLoading, setIsLoading] = useState(false);
 
+  const headingText = t('auth.loginTitle', { lng: activeLangCode }) || 'Welcome back!';
+  const subtitleText = t('auth.loginSubtitle', { lng: activeLangCode }) || 'Enter your registered mobile number to log in';
+  const continueText = t('common.continue', { lng: activeLangCode }) || 'Continue';
+  const newToGigSevakText = t('auth.newToGigSevak', { lng: activeLangCode }) || 'New to GigSevak?';
+  const createAccountText = t('auth.createAccount', { lng: activeLangCode }) || 'Create an account';
+  const fullText = `${headingText}. ${subtitleText}`;
+
   const validate = () => {
-    if (!phoneNumber.trim()) {
-      setError('Please enter your mobile number');
+    const digitsOnly = phoneNumber.replace(/\D/g, '');
+    if (!digitsOnly) {
+      setError(t('auth.mobileNumber.invalidNumber', { lng: activeLangCode }) || 'Please enter your mobile number');
       return false;
     }
-    if (!/^[6-9]\d{9}$/.test(phoneNumber)) {
-      setError('Enter a valid 10-digit mobile number');
+    if (digitsOnly.length !== 10 || !/^[6-9]/.test(digitsOnly)) {
+      setError(t('auth.mobileNumber.invalidNumber', { lng: activeLangCode }) || 'Enter a valid 10-digit mobile number');
       return false;
     }
     setError(undefined);
     return true;
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!validate()) return;
 
     setIsLoading(true);
-    // Frontend-only mock login: store session and navigate directly to dashboard
-    const user = {
-      phoneNumber,
-      name: 'GigSevak Partner',
-      isVerified: true,
-    };
-    sessionStorage.setItem('gharsaathi_worker_session', JSON.stringify(user));
+    setError(undefined);
 
-    setTimeout(() => {
+    try {
+      const cleanPhone = phoneNumber.replace(/\D/g, '');
+      const formattedNumber = `+91${cleanPhone}`;
+      const response = await sendOtpSms(formattedNumber);
+
+      navigate('/worker/verify', {
+        state: {
+          phoneNumber: formattedNumber,
+          mode: 'login',
+          isSimulated: response.isSimulated,
+          simulatedOtp: response.simulatedOtp
+        },
+      });
+    } catch (err: any) {
+      console.error('Login send OTP error:', err);
+      setError(err?.message || 'Failed to send OTP. Please try again.');
+    } finally {
       setIsLoading(false);
-      navigate('/worker/dashboard');
-    }, 300);
+    }
   };
 
   return (
@@ -47,12 +70,20 @@ export const WorkerLogin: React.FC = () => {
       <div className="space-y-6">
         {/* Header Section */}
         <div className="text-center space-y-1.5">
-          <h1 className="text-2xl sm:text-[26px] font-bold tracking-tight text-[#222222]">
-            Welcome back!
-          </h1>
-          {/* <p className="text-sm sm:text-[15px] text-[#6B6B6B] leading-relaxed max-w-[320px] mx-auto">
-            Log in to manage your work and service requests.
-          </p> */}
+          <div className="flex items-center justify-center gap-2">
+            <h1 className="text-2xl sm:text-[26px] font-bold tracking-tight text-[#17212B]">
+              {headingText}
+            </h1>
+            <SpeakerButton
+              text={fullText}
+              langCode={activeLangCode}
+              size="sm"
+              label="Listen instructions"
+            />
+          </div>
+          <p className="text-xs sm:text-sm text-[#66737D] leading-relaxed max-w-[320px] mx-auto">
+            {subtitleText}
+          </p>
         </div>
 
         {/* Login Form */}
@@ -70,20 +101,20 @@ export const WorkerLogin: React.FC = () => {
 
           <div className="pt-2">
             <AuthButton type="submit" variant="outline" isLoading={isLoading}>
-              Continue
+              {continueText}
             </AuthButton>
           </div>
         </form>
 
         {/* Switch to Signup */}
         <div className="text-center pt-2 border-t border-slate-100">
-          <p className="text-sm text-[#6B6B6B]">
-            New to GigSevak?{' '}
+          <p className="text-sm text-[#66737D]">
+            {newToGigSevakText}{' '}
             <Link
               to="/worker/signup"
-              className="font-semibold text-[#A66666] hover:underline underline-offset-4 focus:outline-none focus:ring-1 focus:ring-[#A66666] rounded"
+              className="font-semibold text-[#1C516C] hover:underline underline-offset-4 focus:outline-none focus:ring-1 focus:ring-[#1C516C] rounded"
             >
-              Create an account
+              {createAccountText}
             </Link>
           </p>
         </div>
