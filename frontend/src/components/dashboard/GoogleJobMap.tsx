@@ -54,17 +54,21 @@ export const GoogleJobMap: React.FC<GoogleJobMapProps> = ({
           const customerLatLng = new google.maps.LatLng(latitude, longitude);
           const workerLatLng = new google.maps.LatLng(workerLat, workerLng);
 
-          const map = new google.maps.Map(mapContainerRef.current, {
+          const mapOptions: any = {
             center: customerLatLng,
             zoom: 14,
-            mapId: 'DEMO_MAP_ID',
             disableDefaultUI: false,
             zoomControl: true,
             mapTypeControl: false,
             streetViewControl: false,
             fullscreenControl: true,
             gestureHandling: 'cooperative',
-            styles: [
+          };
+
+          if (google.maps.marker && google.maps.marker.AdvancedMarkerElement) {
+            mapOptions.mapId = 'DEMO_MAP_ID';
+          } else {
+            mapOptions.styles = [
               {
                 featureType: 'poi.business',
                 stylers: [{ visibility: 'on' }],
@@ -74,8 +78,10 @@ export const GoogleJobMap: React.FC<GoogleJobMapProps> = ({
                 elementType: 'labels.icon',
                 stylers: [{ visibility: 'on' }],
               },
-            ],
-          });
+            ];
+          }
+
+          const map = new google.maps.Map(mapContainerRef.current, mapOptions);
 
           // 1 & 2. Customer & Worker Markers (Modern AdvancedMarkerElement when available)
           let customerMarker: any = null;
@@ -216,33 +222,39 @@ export const GoogleJobMap: React.FC<GoogleJobMapProps> = ({
 
   return (
     <div className={`relative rounded-2xl overflow-hidden border border-neutral-200 bg-neutral-100 shadow-2xs ${className}`}>
-      {/* Google Maps Canvas */}
-      {isGoogleMapsConfigured() && !mapError ? (
-        <div ref={mapContainerRef} className="w-full h-full" />
-      ) : GOOGLE_MAPS_API_KEY ? (
-        // Google Maps Embed Iframe with API Key
-        <iframe
-          title={`Google Maps for ${address}`}
-          width="100%"
-          height="100%"
-          style={{ border: 0 }}
-          loading="lazy"
-          allowFullScreen
-          referrerPolicy="no-referrer-when-downgrade"
-          src={`https://www.google.com/maps/embed/v1/directions?key=${encodeURIComponent(GOOGLE_MAPS_API_KEY)}&origin=${workerLat},${workerLng}&destination=${encodeURIComponent(address || `${latitude},${longitude}`)}`}
-        />
-      ) : (
-        // Interactive Fallback Map with both coordinates
-        <div className="relative w-full h-full">
+      {/* Google Maps Canvas - Kept always mounted in DOM to prevent getRootNode() errors during async tear down */}
+      <div
+        ref={mapContainerRef}
+        className="w-full h-full"
+        style={{ display: isGoogleMapsConfigured() && !mapError ? 'block' : 'none' }}
+      />
+
+      {(!isGoogleMapsConfigured() || mapError) && (
+        GOOGLE_MAPS_API_KEY ? (
+          // Google Maps Embed Iframe with API Key
           <iframe
-            title={`Map for ${address}`}
+            title={`Google Maps for ${address}`}
             width="100%"
             height="100%"
             style={{ border: 0 }}
             loading="lazy"
-            src={`https://www.openstreetmap.org/export/embed.html?bbox=${Math.min(workerLng, longitude) - 0.02}%2C${Math.min(workerLat, latitude) - 0.02}%2C${Math.max(workerLng, longitude) + 0.02}%2C${Math.max(workerLat, latitude) + 0.02}&layer=mapnik&marker=${latitude}%2C${longitude}`}
+            allowFullScreen
+            referrerPolicy="no-referrer-when-downgrade"
+            src={`https://www.google.com/maps/embed/v1/directions?key=${encodeURIComponent(GOOGLE_MAPS_API_KEY)}&origin=${workerLat},${workerLng}&destination=${encodeURIComponent(address || `${latitude},${longitude}`)}`}
           />
-        </div>
+        ) : (
+          // Interactive Fallback Map with both coordinates
+          <div className="relative w-full h-full">
+            <iframe
+              title={`Map for ${address}`}
+              width="100%"
+              height="100%"
+              style={{ border: 0 }}
+              loading="lazy"
+              src={`https://www.openstreetmap.org/export/embed.html?bbox=${Math.min(workerLng, longitude) - 0.02}%2C${Math.min(workerLat, latitude) - 0.02}%2C${Math.max(workerLng, longitude) + 0.02}%2C${Math.max(workerLat, latitude) + 0.02}&layer=mapnik&marker=${latitude}%2C${longitude}`}
+            />
+          </div>
+        )
       )}
 
       {/* Floating Google Maps Address & Navigate Bar */}
