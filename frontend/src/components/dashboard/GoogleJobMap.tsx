@@ -33,10 +33,23 @@ export const GoogleJobMap: React.FC<GoogleJobMapProps> = ({
   useEffect(() => {
     let isMounted = true;
 
+    if (!isGoogleMapsConfigured() || (window as any).__googleMapsAuthFailed) {
+      setMapError(true);
+      return;
+    }
+
+    (window as any).__onGoogleMapsAuthFailed = () => {
+      if (isMounted) setMapError(true);
+    };
+
     if (isGoogleMapsConfigured()) {
       loadGoogleMaps()
         .then((google) => {
           if (!isMounted || !mapContainerRef.current) return;
+          if ((window as any).__googleMapsAuthFailed) {
+            setMapError(true);
+            return;
+          }
 
           const customerLatLng = new google.maps.LatLng(latitude, longitude);
           const workerLatLng = new google.maps.LatLng(workerLat, workerLng);
@@ -44,6 +57,7 @@ export const GoogleJobMap: React.FC<GoogleJobMapProps> = ({
           const map = new google.maps.Map(mapContainerRef.current, {
             center: customerLatLng,
             zoom: 14,
+            mapId: 'DEMO_MAP_ID',
             disableDefaultUI: false,
             zoomControl: true,
             mapTypeControl: false,
@@ -63,73 +77,103 @@ export const GoogleJobMap: React.FC<GoogleJobMapProps> = ({
             ],
           });
 
-          // 1. Customer Destination Marker
-          const customerMarker = new google.maps.Marker({
-            position: customerLatLng,
-            map,
-            title: `${clientName || 'Customer'}: ${address}`,
-            animation: google.maps.Animation.DROP,
-            icon: {
-              path: google.maps.SymbolPath.BACKWARD_CLOSED_ARROW,
-              scale: 6,
-              fillColor: '#702963',
-              fillOpacity: 1,
-              strokeWeight: 2,
-              strokeColor: '#FFFFFF',
-            },
-          });
+          // 1 & 2. Customer & Worker Markers (Modern AdvancedMarkerElement when available)
+          let customerMarker: any = null;
 
-          // 2. Worker Current Location Marker
-          new google.maps.Marker({
-            position: workerLatLng,
-            map,
-            title: workerLocation?.name || 'Your Location',
-            icon: {
-              path: google.maps.SymbolPath.CIRCLE,
-              scale: 8,
-              fillColor: '#0ea5e9',
-              fillOpacity: 1,
-              strokeWeight: 2.5,
-              strokeColor: '#FFFFFF',
-            },
-          });
+          if (google.maps.marker && google.maps.marker.AdvancedMarkerElement) {
+            const customerPin = document.createElement('div');
+            customerPin.className = 'w-6 h-6 rounded-full bg-[#702963] border-2 border-white shadow-md flex items-center justify-center text-[11px] text-white font-bold cursor-pointer';
+            customerPin.innerText = 'C';
 
-          // 3. Directions & Route Path
-          const directionsService = new google.maps.DirectionsService();
-          const directionsRenderer = new google.maps.DirectionsRenderer({
-            map,
-            suppressMarkers: true,
-            polylineOptions: {
-              strokeColor: '#702963',
-              strokeWeight: 4.5,
-              strokeOpacity: 0.85,
-            },
-          });
+            customerMarker = new google.maps.marker.AdvancedMarkerElement({
+              position: customerLatLng,
+              map,
+              title: `${clientName || 'Customer'}: ${address}`,
+              content: customerPin,
+            });
 
-          directionsService.route(
-            {
-              origin: workerLatLng,
-              destination: customerLatLng,
-              travelMode: google.maps.TravelMode.DRIVING,
-            },
-            (result: any, status: any) => {
-              if (status === google.maps.DirectionsStatus.OK && result) {
-                directionsRenderer.setDirections(result);
-                const leg = result.routes[0]?.legs[0];
-                if (leg && isMounted) {
-                  setRouteInfo({
-                    distance: leg.distance?.text || '1.8 km',
-                    duration: leg.duration?.text || '12 mins',
-                  });
+            const workerPin = document.createElement('div');
+            workerPin.className = 'w-6 h-6 rounded-full bg-[#0ea5e9] border-2 border-white shadow-md flex items-center justify-center text-[11px] text-white font-bold cursor-pointer';
+            workerPin.innerText = 'W';
+
+            new google.maps.marker.AdvancedMarkerElement({
+              position: workerLatLng,
+              map,
+              title: workerLocation?.name || 'Your Location',
+              content: workerPin,
+            });
+          } else {
+            // Fallback to legacy Marker
+            customerMarker = new google.maps.Marker({
+              position: customerLatLng,
+              map,
+              title: `${clientName || 'Customer'}: ${address}`,
+              animation: google.maps.Animation.DROP,
+              icon: {
+                path: google.maps.SymbolPath.BACKWARD_CLOSED_ARROW,
+                scale: 6,
+                fillColor: '#702963',
+                fillOpacity: 1,
+                strokeWeight: 2,
+                strokeColor: '#FFFFFF',
+              },
+            });
+
+            new google.maps.Marker({
+              position: workerLatLng,
+              map,
+              title: workerLocation?.name || 'Your Location',
+              icon: {
+                path: google.maps.SymbolPath.CIRCLE,
+                scale: 8,
+                fillColor: '#0ea5e9',
+                fillOpacity: 1,
+                strokeWeight: 2.5,
+                strokeColor: '#FFFFFF',
+              },
+            });
+          }
+
+          // 3. Directions & Route Path (Safe execution)
+          try {
+            const directionsService = new google.maps.DirectionsService();
+            const directionsRenderer = new google.maps.DirectionsRenderer({
+              map,
+              suppressMarkers: true,
+              polylineOptions: {
+                strokeColor: '#702963',
+                strokeWeight: 4.5,
+                strokeOpacity: 0.85,
+              },
+            });
+
+            directionsService.route(
+              {
+                origin: workerLatLng,
+                destination: customerLatLng,
+                travelMode: google.maps.TravelMode.DRIVING,
+              },
+              (result: any, status: any) => {
+                if (status === google.maps.DirectionsStatus.OK && result) {
+                  directionsRenderer.setDirections(result);
+                  const leg = result.routes[0]?.legs[0];
+                  if (leg && isMounted) {
+                    setRouteInfo({
+                      distance: leg.distance?.text || '1.8 km',
+                      duration: leg.duration?.text || '12 mins',
+                    });
+                  }
+                } else {
+                  const bounds = new google.maps.LatLngBounds();
+                  bounds.extend(customerLatLng);
+                  bounds.extend(workerLatLng);
+                  map.fitBounds(bounds, { top: 40, bottom: 40, left: 40, right: 40 });
                 }
-              } else {
-                const bounds = new google.maps.LatLngBounds();
-                bounds.extend(customerLatLng);
-                bounds.extend(workerLatLng);
-                map.fitBounds(bounds, { top: 40, bottom: 40, left: 40, right: 40 });
               }
-            }
-          );
+            );
+          } catch (routeErr) {
+            console.warn('[GoogleJobMap] Directions error fallback notice:', routeErr);
+          }
 
           // Customer InfoWindow
           if (clientName || serviceName) {
@@ -143,10 +187,18 @@ export const GoogleJobMap: React.FC<GoogleJobMapProps> = ({
             const infoWindow = new google.maps.InfoWindow({
               content: contentString,
             });
-            infoWindow.open(map, customerMarker);
-            customerMarker.addListener('click', () => {
-              infoWindow.open(map, customerMarker);
-            });
+            if (customerMarker) {
+              infoWindow.open({
+                anchor: customerMarker,
+                map,
+              });
+              customerMarker.addListener('click', () => {
+                infoWindow.open({
+                  anchor: customerMarker,
+                  map,
+                });
+              });
+            }
           }
         })
         .catch((err) => {

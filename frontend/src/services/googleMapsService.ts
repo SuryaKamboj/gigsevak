@@ -34,6 +34,17 @@ export function loadGoogleMaps(): Promise<any> {
     );
   }
 
+  // Listen for Google Maps auth failures (e.g. RefererNotAllowedMapError)
+  if (!(window as any).gm_authFailure) {
+    (window as any).gm_authFailure = () => {
+      console.warn('[googleMapsService] Google Maps Authentication failed. Triggering fallback.');
+      (window as any).__googleMapsAuthFailed = true;
+      if (typeof (window as any).__onGoogleMapsAuthFailed === 'function') {
+        (window as any).__onGoogleMapsAuthFailed();
+      }
+    };
+  }
+
   window.__googleMapsLoadedPromise = new Promise<any>((resolve, reject) => {
     const callbackName = `__gmap_init_${Date.now()}`;
     (window as any)[callbackName] = () => {
@@ -45,7 +56,7 @@ export function loadGoogleMaps(): Promise<any> {
     script.type = 'text/javascript';
     script.src = `https://maps.googleapis.com/maps/api/js?key=${encodeURIComponent(
       GOOGLE_MAPS_API_KEY
-    )}&libraries=places,geometry&callback=${callbackName}&loading=async`;
+    )}&libraries=places,geometry,marker&callback=${callbackName}&loading=async`;
     script.async = true;
     script.defer = true;
 
