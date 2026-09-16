@@ -297,7 +297,12 @@
     "backToDashboard": "Back to Dashboard",
     "refreshStatus": "Refresh Status",
     "statusUpdated": "Status is up to date",
-    "needHelp": "Need help with your application?"
+    "needHelp": "Need help with your application?",
+    "goToWorkerDashboard": "Go to Worker Dashboard",
+    "approvedTitle": "Application Approved!",
+    "approvedSubtitle": "Congratulations! Your partner credentials and KYC have been verified. You can now access your dashboard and start accepting jobs.",
+    "approvedStatus": "Approved & Active",
+    "simulateApproval": "Simulate Instant Approval (Test)"
   },
   "account": {
     "title": "Worker Account",

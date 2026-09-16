@@ -6,11 +6,20 @@ import { PhoneInput } from '../../components/auth/PhoneInput';
 import { AuthButton } from '../../components/auth/AuthButton';
 import { SpeakerButton } from '../../components/common/SpeakerButton';
 import { sendOtpSms } from '../../services/firebaseAuth';
+import { authService } from '../../services/authService';
 
 export const WorkerLogin: React.FC = () => {
   const navigate = useNavigate();
   const { t, i18n } = useTranslation();
   const activeLangCode = i18n.language || localStorage.getItem('workerLanguage') || 'en';
+
+  // If already logged in, redirect based on approval status
+  React.useEffect(() => {
+    if (authService.isAuthenticated()) {
+      const status = localStorage.getItem('worker_application_status');
+      navigate(status === 'approved' ? '/worker/dashboard' : '/worker/pending-request', { replace: true });
+    }
+  }, [navigate]);
 
   const [phoneNumber, setPhoneNumber] = useState('');
   const [error, setError] = useState<string | undefined>();

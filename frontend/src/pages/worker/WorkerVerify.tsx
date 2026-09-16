@@ -9,6 +9,7 @@ import { AuthButton } from '../../components/auth/AuthButton';
 import { SpeakerButton } from '../../components/common/SpeakerButton';
 import { verifyOtpCode, sendOtpSms } from '../../services/firebaseAuth';
 import { onboardingService } from '../../services/onboardingService';
+import { workerBackendService } from '../../services/workerBackendService';
 
 interface LocationState {
   phoneNumber?: string;
@@ -64,19 +65,36 @@ export const WorkerVerify: React.FC = () => {
       setSuccessMessage(t('auth.otp.otpVerifiedSuccess', { lng: activeLangCode }) || 'Mobile number verified successfully.');
       onboardingService.updateState({ mobileNumber: rawPhone, isMobileCompleted: true });
 
-      // Save user session
+      // Save user session permanently in localStorage
       const userSession = {
         phoneNumber: rawPhone,
-        name: 'GigSevak',
+        name: 'Rajesh Kumar',
         isVerified: true,
         verifiedAt: new Date().toISOString()
       };
+      localStorage.setItem('gharsaathi_worker_session', JSON.stringify(userSession));
       sessionStorage.setItem('gharsaathi_worker_session', JSON.stringify(userSession));
       localStorage.setItem('user_mobile_number', rawPhone);
 
+      let isWorkerApproved = false;
+      try {
+        const formattedPhone = rawPhone.startsWith('+91') ? rawPhone : `+91${rawPhone.replace(/\D/g, '').slice(-10)}`;
+        await workerBackendService.loginWorker(formattedPhone, 'Worker Partner');
+        const profileRes = await workerBackendService.getProfile();
+        const workerDoc = profileRes?.data || profileRes;
+        isWorkerApproved = workerDoc?.kycVerificationStatus === 'VERIFIED';
+      } catch (err: any) {
+        console.warn('Backend login warning during OTP verification:', err?.message || err);
+      }
+
+      localStorage.setItem('worker_application_status', isWorkerApproved ? 'approved' : 'pending');
+
       setTimeout(() => {
-        const target = mode === 'signup' ? '/worker/verification' : '/worker/dashboard';
-        navigate(target, { replace: true });
+        if (mode === 'signup') {
+          navigate('/worker/verification', { replace: true });
+        } else {
+          navigate(isWorkerApproved ? '/worker/dashboard' : '/worker/pending-request', { replace: true });
+        }
       }, 700);
     } catch (err: any) {
       console.error('OTP verification error:', err);

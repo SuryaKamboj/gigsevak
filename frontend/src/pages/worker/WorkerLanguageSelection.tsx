@@ -7,7 +7,7 @@ import { LanguageCard } from '../../components/language/LanguageCard';
 import { SpeakerButton } from '../../components/common/SpeakerButton';
 import { LANGUAGES, type Language } from '../../data/languages';
 import { speakText } from '../../utils/textToSpeech';
-import { onboardingService } from '../../services/onboardingService';
+import { authService } from '../../services/authService';
 
 export const WorkerLanguageSelection: React.FC = () => {
   const navigate = useNavigate();
@@ -15,20 +15,12 @@ export const WorkerLanguageSelection: React.FC = () => {
 
   const [selectedLanguage, setSelectedLanguage] = useState<Language | null>(null);
 
-  // Clear previous session & form cache on start so every run is fresh
+  // If worker is already logged in, redirect directly to dashboard
   useEffect(() => {
-    try {
-      localStorage.removeItem('user_mobile_number');
-      localStorage.removeItem('user_assistance_mode');
-      localStorage.removeItem('user_selected_language');
-      localStorage.removeItem('gigsevak_onboarding_state');
-      localStorage.removeItem('gigsevak_identity_status');
-      sessionStorage.clear();
-      onboardingService.reset();
-    } catch {
-      // Ignored
+    if (authService.isAuthenticated()) {
+      navigate('/worker/dashboard', { replace: true });
     }
-  }, []);
+  }, [navigate]);
 
   const handleLanguageSelect = (lang: Language) => {
     setSelectedLanguage(lang);

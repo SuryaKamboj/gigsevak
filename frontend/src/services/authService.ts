@@ -6,6 +6,8 @@
  * with actual HTTP fetch / axios calls to your authentication endpoints.
  */
 
+import { onboardingService } from './onboardingService';
+
 export interface WorkerUser {
   name?: string;
   phoneNumber: string;
@@ -60,12 +62,24 @@ export const authService = {
     if (otp === MOCK_OTP) {
       const user: WorkerUser = {
         phoneNumber,
-        name: name || 'GharSaathi Worker',
+        name: name || 'Rajesh Kumar',
         isVerified: true,
       };
 
-      // Store in sessionStorage for session simulation
+      // Authenticate with shared GigSevak backend to acquire JWT
+      try {
+        const { workerBackendService } = await import('./workerBackendService');
+        const formattedPhone = phoneNumber.startsWith('+91') ? phoneNumber : `+91${phoneNumber.replace(/\D/g, '').slice(-10)}`;
+        await workerBackendService.loginWorker(formattedPhone, name || 'Rajesh Kumar');
+      } catch (err: any) {
+        console.warn('[WorkerAuth] Backend auth sync warning:', err.message);
+      }
+
+      // Store in both localStorage and sessionStorage for persistence
+      localStorage.setItem('gharsaathi_worker_session', JSON.stringify(user));
       sessionStorage.setItem('gharsaathi_worker_session', JSON.stringify(user));
+      localStorage.setItem('user_mobile_number', phoneNumber);
+      localStorage.setItem('worker_application_status', 'approved');
 
       return {
         success: true,
@@ -81,21 +95,75 @@ export const authService = {
   },
 
   /**
-   * Get currently authenticated mock worker session
+   * Get currently authenticated worker session from localStorage or sessionStorage
    */
   getCurrentUser(): WorkerUser | null {
     try {
-      const session = sessionStorage.getItem('gharsaathi_worker_session');
-      return session ? JSON.parse(session) : null;
+      const session = localStorage.getItem('gharsaathi_worker_session') || sessionStorage.getItem('gharsaathi_worker_session');
+      if (session) return JSON.parse(session);
+
+      const workerUserJson = localStorage.getItem('gigsevak_worker_user');
+      if (workerUserJson) {
+        const parsed = JSON.parse(workerUserJson);
+        return {
+          name: parsed.fullName || 'Rajesh Kumar',
+          phoneNumber: parsed.mobileNumber || '',
+          isVerified: true
+        };
+      }
+
+      const phone = localStorage.getItem('user_mobile_number');
+      if (phone) {
+        return {
+          name: 'Rajesh Kumar',
+          phoneNumber: phone,
+          isVerified: true
+        };
+      }
+
+      return null;
     } catch {
       return null;
     }
   },
 
   /**
-   * Log out current session
+   * Check if worker is currently authenticated and has an active session
+   */
+  isAuthenticated(): boolean {
+    try {
+      const token = localStorage.getItem('gigsevak_token') || sessionStorage.getItem('gigsevak_token');
+      const session = localStorage.getItem('gharsaathi_worker_session') || sessionStorage.getItem('gharsaathi_worker_session');
+      const status = localStorage.getItem('worker_application_status');
+      const phone = localStorage.getItem('user_mobile_number');
+      return Boolean(token || session || status === 'approved' || phone);
+    } catch {
+      return false;
+    }
+  },
+
+  /**
+   * Log out current session and clear stored credentials
    */
   logout(): void {
-    sessionStorage.removeItem('gharsaathi_worker_session');
+    try {
+      localStorage.removeItem('gharsaathi_worker_session');
+      localStorage.removeItem('gigsevak_token');
+      localStorage.removeItem('gigsevak_worker_user');
+      localStorage.removeItem('worker_application_status');
+      localStorage.removeItem('user_mobile_number');
+      localStorage.removeItem('user_assistance_mode');
+      localStorage.removeItem('gigsevak_onboarding_state');
+      localStorage.removeItem('gigsevak_identity_status');
+      localStorage.removeItem('workerLanguage');
+      localStorage.removeItem('user_selected_language');
+      localStorage.removeItem('gigsevak_worker_categories');
+      localStorage.removeItem('gigsevak_worker_location');
+      localStorage.removeItem('gigsevak_account_worker');
+      sessionStorage.clear();
+      onboardingService.reset();
+    } catch (e) {
+      console.warn('Worker logout cleanup error:', e);
+    }
   },
 };

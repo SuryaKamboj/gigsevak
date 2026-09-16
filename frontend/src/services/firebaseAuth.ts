@@ -14,9 +14,28 @@ const firebaseConfig = {
   measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID || ''
 };
 
-// Initialize Firebase App
-export const app = getApps().length > 0 ? getApp() : initializeApp(firebaseConfig);
-export const auth = getAuth(app);
+// Initialize Firebase App safely if valid config is present
+const hasValidConfig = Boolean(firebaseConfig.apiKey && !firebaseConfig.apiKey.includes('your_firebase'));
+
+export const app = (() => {
+  if (!hasValidConfig) return null;
+  try {
+    return getApps().length > 0 ? getApp() : initializeApp(firebaseConfig);
+  } catch (err) {
+    console.warn('Firebase initialization skipped or failed:', err);
+    return null;
+  }
+})();
+
+export const auth = (() => {
+  if (!app) return null;
+  try {
+    return getAuth(app);
+  } catch (err) {
+    console.warn('Firebase Auth initialization skipped or failed:', err);
+    return null;
+  }
+})();
 
 export interface SendOtpResult {
   confirmationResult: any;

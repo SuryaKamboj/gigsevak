@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { Check, Camera, RotateCcw, AlertCircle, CheckCircle2, Upload, Sparkles } from 'lucide-react';
+import { Check, Camera, RotateCcw, AlertCircle, CheckCircle2, Upload, Sparkles, Lock } from 'lucide-react';
 import { AuthLayout } from '../../components/auth/AuthLayout';
 import { AuthButton } from '../../components/auth/AuthButton';
 import { SpeakerButton } from '../../components/common/SpeakerButton';
@@ -14,6 +14,7 @@ import {
   saveSelfieVerification
 } from '../../services/identityService';
 import { onboardingService } from '../../services/onboardingService';
+import { workerBackendService } from '../../services/workerBackendService';
 
 type AadhaarStatus = 'not_started' | 'in_progress' | 'otp_pending' | 'verified' | 'error';
 type SelfieStatus = 'locked' | 'in_progress' | 'photo_selected' | 'verified' | 'error';
@@ -119,6 +120,11 @@ export const WorkerVerification: React.FC = () => {
     e.preventDefault();
     const rawDigits = aadhaarNumber.replace(/\s/g, '');
 
+    if (!rawDigits) {
+      setAadhaarError(t('identity.aadhaar.required', { lng: activeLangCode }) || 'Aadhaar number is mandatory. Please enter your 12-digit Aadhaar number.');
+      return;
+    }
+
     if (rawDigits.length !== 12) {
       setAadhaarError(t('identity.aadhaar.invalidNumber', { lng: activeLangCode }) || 'Please enter a valid 12-digit Aadhaar number');
       return;
@@ -157,6 +163,7 @@ export const WorkerVerification: React.FC = () => {
     try {
       await verifyAadhaarOtp(aadhaarNumber, aadhaarOtp);
       setAadhaarStatus('verified');
+      sessionStorage.setItem('gigsevak_worker_aadhaar', aadhaarNumber);
       onboardingService.updateState({ isAadhaarVerified: true });
       setSelfieStatus('in_progress');
     } catch (err: any) {
@@ -211,6 +218,11 @@ export const WorkerVerification: React.FC = () => {
 
   // Step 3: Confirm Selfie & Verify Liveness
   const handleConfirmSelfie = async () => {
+    if (aadhaarStatus !== 'verified') {
+      setAadhaarError('Aadhaar verification is mandatory before completing identity verification.');
+      return;
+    }
+
     if (!photoDataUrl) {
       setSelfieError(t('identity.selfie.captureFirstError', { lng: activeLangCode }) || 'Please capture a live photo first');
       return;
@@ -223,11 +235,34 @@ export const WorkerVerification: React.FC = () => {
       const result = await verifySelfieLiveness(photoDataUrl);
       saveSelfieVerification(result);
       setSelfieStatus('verified');
+      sessionStorage.setItem('gigsevak_worker_selfie', photoDataUrl);
       onboardingService.updateState({ isSelfieVerified: true });
 
-      setTimeout(() => {
-        navigate('/worker/categories', { replace: true });
-      }, 700);
+      // Proactively sync identity verification to backend
+      try {
+        const storedPhone =
+          localStorage.getItem('user_mobile_number') ||
+          JSON.parse(localStorage.getItem('gharsaathi_worker_session') || '{}')?.phoneNumber;
+        if (storedPhone) {
+          const formattedPhone = storedPhone.startsWith('+91')
+            ? storedPhone
+            : `+91${storedPhone.replace(/\D/g, '').slice(-10)}`;
+          await workerBackendService.loginWorker(formattedPhone, 'Worker Partner');
+        }
+        await workerBackendService.submitOnboardingApplication({
+          aadhaarNumber,
+          aadhaarVerified: true,
+          selfieUrl: photoDataUrl
+        });
+      } catch (syncErr) {
+        console.warn('Backend identity sync notice:', syncErr);
+      }
+
+      if (aadhaarStatus === 'verified') {
+        setTimeout(() => {
+          navigate('/worker/categories', { replace: true });
+        }, 700);
+      }
     } catch (err: any) {
       setSelfieError(err.message || 'Liveness check failed. Please retake photo.');
     } finally {
@@ -329,9 +364,14 @@ export const WorkerVerification: React.FC = () => {
                   {aadhaarStatus === 'verified' ? <Check className="w-4 h-4 stroke-[3]" /> : '1'}
                 </div>
                 <div>
-                  <h2 className="text-base font-bold text-[#17212B]">
-                    {aadhaarTitle}
-                  </h2>
+                  <div className="flex items-center gap-2">
+                    <h2 className="text-base font-bold text-[#17212B]">
+                      {aadhaarTitle}
+                    </h2>
+                    <span className="text-[10px] font-bold text-[#953638] bg-[#953638]/10 px-2 py-0.5 rounded-md uppercase tracking-wider">
+                      Mandatory
+                    </span>
+                  </div>
                   <p className="text-xs sm:text-sm text-[#66737D]">
                     {aadhaarDesc}
                   </p>
@@ -362,7 +402,7 @@ export const WorkerVerification: React.FC = () => {
                 <div className="space-y-1">
                   <div className="flex items-center justify-between">
                     <label htmlFor="aadhaar-input" className="block text-xs font-semibold text-[#17212B]">
-                      {aadhaarLabel}
+                      {aadhaarLabel} <span className="text-[#953638] font-bold">*</span>
                     </label>
                     <span className="text-[10px] text-[#66737D]">Demo: 5489 6789 0124</span>
                   </div>
@@ -376,6 +416,7 @@ export const WorkerVerification: React.FC = () => {
                     onChange={handleAadhaarChange}
                     placeholder="XXXX XXXX XXXX"
                     disabled={isVerifyingAadhaar}
+                    required
                     className={`w-full h-12 sm:h-13 px-4 text-center text-base sm:text-lg font-bold tracking-widest text-[#17212B] placeholder:text-[#66737D]/40 bg-white rounded-xl border transition-all outline-none ${
                       aadhaarError
                         ? 'border-[#953638] ring-2 ring-[#953638]/20 bg-red-50/10'
@@ -391,26 +432,14 @@ export const WorkerVerification: React.FC = () => {
                   </div>
                 )}
 
-                <div className="pt-1 flex gap-2">
-                  <div className="flex-1">
-                    <AuthButton
-                      type="submit"
-                      variant="outline"
-                      isLoading={isVerifyingAadhaar}
-                    >
-                      {aadhaarVerifyBtn}
-                    </AuthButton>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setAadhaarStatus('verified');
-                      setSelfieStatus('in_progress');
-                    }}
-                    className="px-3 text-xs font-semibold text-[#66737D] border border-slate-200 rounded-xl hover:bg-slate-50"
+                <div className="pt-1">
+                  <AuthButton
+                    type="submit"
+                    variant="outline"
+                    isLoading={isVerifyingAadhaar}
                   >
-                    Skip to Selfie
-                  </button>
+                    {aadhaarVerifyBtn}
+                  </AuthButton>
                 </div>
               </form>
             )}
@@ -476,12 +505,20 @@ export const WorkerVerification: React.FC = () => {
             className={`rounded-2xl border transition-all p-4 sm:p-5 ${
               selfieStatus === 'verified'
                 ? 'border-emerald-200 bg-emerald-50/20'
+                : aadhaarStatus !== 'verified'
+                ? 'border-[#D9D9D9] bg-slate-50/70'
                 : 'border-[#D9D9D9] bg-white shadow-soft'
             }`}
           >
             <div 
-              className="flex items-center justify-between cursor-pointer"
+              className={`flex items-center justify-between ${
+                aadhaarStatus === 'verified' ? 'cursor-pointer' : 'cursor-not-allowed opacity-80'
+              }`}
               onClick={() => {
+                if (aadhaarStatus !== 'verified') {
+                  setAadhaarError('Aadhaar verification is mandatory before proceeding to Selfie verification.');
+                  return;
+                }
                 if (selfieStatus !== 'verified') {
                   setSelfieStatus('in_progress');
                   startCamera();
@@ -493,21 +530,34 @@ export const WorkerVerification: React.FC = () => {
                   className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold ${
                     selfieStatus === 'verified'
                       ? 'bg-[#2E9B57] text-white'
+                      : aadhaarStatus !== 'verified'
+                      ? 'bg-slate-200 text-slate-500'
                       : 'bg-[#1C516C]/10 text-[#1C516C]'
                   }`}
                 >
                   {selfieStatus === 'verified' ? (
                     <Check className="w-4 h-4 stroke-[3]" />
+                  ) : aadhaarStatus !== 'verified' ? (
+                    <Lock className="w-3.5 h-3.5 text-slate-500" />
                   ) : (
                     '2'
                   )}
                 </div>
                 <div>
-                  <h2 className="text-base font-bold text-[#17212B]">
-                    {selfieTitle}
-                  </h2>
+                  <div className="flex items-center gap-2">
+                    <h2 className="text-base font-bold text-[#17212B]">
+                      {selfieTitle}
+                    </h2>
+                    {aadhaarStatus !== 'verified' && (
+                      <span className="text-[10px] font-semibold text-slate-500 bg-slate-200 px-2 py-0.5 rounded-md flex items-center gap-1">
+                        <Lock className="w-2.5 h-2.5" /> Locked
+                      </span>
+                    )}
+                  </div>
                   <p className="text-xs sm:text-sm text-[#66737D]">
-                    {selfieDesc}
+                    {aadhaarStatus !== 'verified'
+                      ? 'Locked — Complete mandatory Aadhaar verification first'
+                      : selfieDesc}
                   </p>
                 </div>
               </div>
@@ -519,8 +569,8 @@ export const WorkerVerification: React.FC = () => {
               )}
             </div>
 
-            {/* Selfie Active Interface */}
-            {selfieStatus !== 'verified' && (
+            {/* Selfie Active Interface - Only unlocked after Aadhaar is verified */}
+            {aadhaarStatus === 'verified' && selfieStatus !== 'verified' && (
               <div className="mt-4 pt-3 border-t border-slate-100 space-y-3.5">
                 {/* Viewfinder Container */}
                 <div className="relative w-full aspect-[4/3] max-h-[260px] rounded-2xl overflow-hidden bg-slate-900 border-2 border-[#1C516C]/30 flex flex-col items-center justify-center shadow-inner">

@@ -11,14 +11,20 @@ import { useTranslation } from 'react-i18next';
 import type { JobItem } from '../../types/dashboard';
 import { authService } from '../../services/authService';
 
+import { workerBackendService } from '../../services/workerBackendService';
+
 interface HomePageProps {
   jobsList?: JobItem[];
   onUpdateJob?: (updatedJob: JobItem) => void;
+  onAcceptJob?: (job: JobItem) => void;
+  onDeclineJob?: (job: JobItem) => void;
 }
 
 export const HomePage: React.FC<HomePageProps> = ({
   jobsList = MOCK_JOBS,
   onUpdateJob,
+  onAcceptJob,
+  onDeclineJob,
 }) => {
   const { t, i18n } = useTranslation();
   const activeLangCode = i18n.language || localStorage.getItem('workerLanguage') || 'en';
@@ -87,6 +93,10 @@ export const HomePage: React.FC<HomePageProps> = ({
     if (!otpJob) return;
     const updated: JobItem = { ...otpJob, isLocationReached: true, locationVerified: true };
     handleUpdate(updated);
+    if (otpJob?.id) {
+      workerBackendService.markInTransit(otpJob.id).catch(() => {});
+      workerBackendService.markArrived(otpJob.id).catch(() => {});
+    }
     setOtpJob(null);
     // Directly proceed to Step 2: Before-Work Photo interface ("Before You Start")
     setBeforeWorkJob(updated);
@@ -104,6 +114,9 @@ export const HomePage: React.FC<HomePageProps> = ({
       status: 'in_progress',
     };
     handleUpdate(updated);
+    if (beforeWorkJob?.id) {
+      workerBackendService.startJobWithOtp(beforeWorkJob.id, '1234').catch(() => {});
+    }
     setBeforeWorkJob(null);
     // Launch Step 3: Dedicated Work Session with live Stopwatch & SOS
     setActiveSessionJob(updated);
@@ -150,6 +163,9 @@ export const HomePage: React.FC<HomePageProps> = ({
       completionVerified: true,
     };
     handleUpdate(updated);
+    if (completeWorkJob?.id) {
+      workerBackendService.completeJob(completeWorkJob.id).catch(() => {});
+    }
     setNotification('✓ Work completed successfully');
     setCompleteWorkJob(null);
     setActiveSessionJob(null);
@@ -171,6 +187,8 @@ export const HomePage: React.FC<HomePageProps> = ({
       (job.status === 'accepted' || job.status === 'in_progress' || job.status === 'completed') &&
       (job.date === 'today' || !job.date)
   );
+
+  const pendingJobs = localJobs.filter((job: JobItem) => job.status === 'pending');
 
   const completedCount = todayJobs.filter((job) => job.status === 'completed').length;
   const inProgressCount = todayJobs.filter((job) => job.status === 'in_progress' || (job.workStarted && job.status !== 'completed')).length;
@@ -243,6 +261,59 @@ export const HomePage: React.FC<HomePageProps> = ({
             ✕
           </button>
         </div>
+      )}
+
+      {/* Incoming Requests Alert Section */}
+      {pendingJobs.length > 0 && (
+        <section className="space-y-3 bg-amber-500/10 border-2 border-amber-500/30 p-4 sm:p-5 rounded-3xl animate-in fade-in zoom-in-95 duration-200">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2.5">
+              <span className="relative flex h-3.5 w-3.5">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-500 opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-3.5 w-3.5 bg-amber-600"></span>
+              </span>
+              <h2 className="text-base sm:text-lg font-extrabold text-neutral-dark">
+                {t('dashboard.incomingRequests', 'New Incoming Service Requests')}
+              </h2>
+            </div>
+            <span className="text-xs font-bold px-3 py-1 rounded-full bg-amber-500 text-white shadow-xs">
+              {pendingJobs.length} {t('dashboard.actionRequired', 'New Request')}
+            </span>
+          </div>
+
+          <div className="grid grid-cols-1 gap-3">
+            {pendingJobs.map((job: JobItem) => (
+              <WorkCard
+                key={job.id}
+                job={job}
+                showActions={true}
+                showCompleteCheckbox={false}
+                onAccept={async (e, j) => {
+                  e?.stopPropagation();
+                  if (onAcceptJob) {
+                    await onAcceptJob(j);
+                  } else {
+                    handleUpdate({ ...j, status: 'accepted', date: 'today' });
+                  }
+                  setNotification(`✓ Accepted "${j.serviceName}"!`);
+                  setTimeout(() => setNotification(null), 3000);
+                }}
+                onDecline={async (e, j) => {
+                  e?.stopPropagation();
+                  if (onDeclineJob) {
+                    await onDeclineJob(j);
+                  } else {
+                    handleUpdate({ ...j, status: 'declined' });
+                  }
+                  setNotification(`Declined "${j.serviceName}"`);
+                  setTimeout(() => setNotification(null), 3000);
+                }}
+                onDetails={() => setSelectedJob(job)}
+                onClick={() => setSelectedJob(job)}
+              />
+            ))}
+          </div>
+        </section>
       )}
 
       {/* Today's Work Section */}

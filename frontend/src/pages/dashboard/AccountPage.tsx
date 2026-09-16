@@ -13,7 +13,7 @@ export const AccountPage: React.FC<AccountPageProps> = ({ onBack }) => {
 
   const handleLogout = () => {
     authService.logout();
-    navigate('/worker/login');
+    navigate('/worker/language', { replace: true });
   };
 
   // Pre-populate with any authenticated worker or onboarding session data if available

@@ -414,8 +414,8 @@ export const JobDetailsModal: React.FC<JobDetailsModalProps> = ({
 
           {/* Action Buttons */}
           <div className="pt-2 pb-2 space-y-2.5">
-            {/* BOOKING MANAGEMENT MODE (Used in All Bookings) */}
-            {showBookingActions ? (
+            {/* BOOKING MANAGEMENT MODE (Used in All Bookings or when job is Pending) */}
+            {(showBookingActions || job.status === 'pending') ? (
               job.status === 'completed' ? (
                 <button
                   type="button"

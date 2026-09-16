@@ -258,6 +258,11 @@ export const JobDetailPage: React.FC<JobDetailPageProps> = ({
             address={translatedAddress}
             clientName={job.clientName}
             serviceName={translatedServiceName}
+            workerLocation={{
+              latitude: 28.5300,
+              longitude: 77.2090,
+              name: 'You (Rajesh Kumar)'
+            }}
             className="h-56 sm:h-64 w-full"
           />
         </section>

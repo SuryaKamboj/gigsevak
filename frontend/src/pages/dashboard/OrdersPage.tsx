@@ -9,11 +9,15 @@ import type { JobItem } from '../../types/dashboard';
 interface OrdersPageProps {
   jobsList?: JobItem[];
   onUpdateJob?: (updatedJob: JobItem) => void;
+  onAcceptJob?: (job: JobItem) => void;
+  onDeclineJob?: (job: JobItem) => void;
 }
 
 export const OrdersPage: React.FC<OrdersPageProps> = ({
   jobsList = MOCK_JOBS,
   onUpdateJob,
+  onAcceptJob,
+  onDeclineJob,
 }) => {
   const { t } = useTranslation();
   const [searchQuery, setSearchQuery] = useState('');
@@ -26,7 +30,10 @@ export const OrdersPage: React.FC<OrdersPageProps> = ({
     setBookings(jobsList);
   }, [jobsList]);
 
-  const handleAccept = (job: JobItem, _e?: React.MouseEvent) => {
+  const handleAccept = async (job: JobItem, _e?: React.MouseEvent) => {
+    if (onAcceptJob) {
+      await onAcceptJob(job);
+    }
     const updated: JobItem = { ...job, status: 'accepted', date: 'today' };
     setBookings((prev) =>
       prev.map((item) => (item.id === job.id ? updated : item))
@@ -40,7 +47,10 @@ export const OrdersPage: React.FC<OrdersPageProps> = ({
     }, 1000);
   };
 
-  const handleDecline = (job: JobItem, _e?: React.MouseEvent) => {
+  const handleDecline = async (job: JobItem, _e?: React.MouseEvent) => {
+    if (onDeclineJob) {
+      await onDeclineJob(job);
+    }
     const updated = { ...job, status: 'declined' as const };
     setBookings((prev) =>
       prev.map((item) => (item.id === job.id ? updated : item))
