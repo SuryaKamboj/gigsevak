@@ -37,17 +37,32 @@ export const HomePage: React.FC<HomePageProps> = ({
   const [localJobs, setLocalJobs] = useState<JobItem[]>(jobsList);
   const [notification, setNotification] = useState<string | null>(null);
 
+  const [profileName, setProfileName] = useState<string>('');
+
   React.useEffect(() => {
     setLocalJobs(jobsList);
   }, [jobsList]);
 
+  React.useEffect(() => {
+    workerBackendService
+      .getProfile()
+      .then((res: any) => {
+        const p = res?.data || res;
+        if (p?.fullName) {
+          setProfileName(p.fullName);
+        }
+      })
+      .catch(() => {});
+  }, []);
+
   const workerName = (() => {
+    if (profileName) return profileName;
     const user = authService.getCurrentUser();
     if (user?.name) {
       const clean = user.name.replace(/\bpartner\b/gi, '').trim();
       if (clean) return clean;
     }
-    return 'Rajesh';
+    return 'Worker';
   })();
 
   const handleUpdate = (updatedJob: JobItem) => {

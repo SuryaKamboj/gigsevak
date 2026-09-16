@@ -60,26 +60,36 @@ export const authService = {
     await new Promise((resolve) => setTimeout(resolve, 400));
 
     if (otp === MOCK_OTP) {
-      const user: WorkerUser = {
-        phoneNumber,
-        name: name || 'Rajesh Kumar',
-        isVerified: true,
-      };
+      let resolvedName = name || '';
+      let isWorkerApproved = false;
 
       // Authenticate with shared GigSevak backend to acquire JWT
       try {
         const { workerBackendService } = await import('./workerBackendService');
-        const formattedPhone = phoneNumber.startsWith('+91') ? phoneNumber : `+91${phoneNumber.replace(/\D/g, '').slice(-10)}`;
-        await workerBackendService.loginWorker(formattedPhone, name || 'Rajesh Kumar');
+        const cleanDigits = phoneNumber.replace(/\D/g, '').slice(-10);
+        const formattedPhone = `+91${cleanDigits}`;
+        const loginRes = await workerBackendService.loginWorker(formattedPhone, name);
+        if (loginRes?.user?.fullName) {
+          resolvedName = loginRes.user.fullName;
+        }
+        if (loginRes?.user?.kycVerificationStatus === 'VERIFIED') {
+          isWorkerApproved = true;
+        }
       } catch (err: any) {
         console.warn('[WorkerAuth] Backend auth sync warning:', err.message);
       }
+
+      const user: WorkerUser = {
+        phoneNumber,
+        name: resolvedName,
+        isVerified: true,
+      };
 
       // Store in both localStorage and sessionStorage for persistence
       localStorage.setItem('gharsaathi_worker_session', JSON.stringify(user));
       sessionStorage.setItem('gharsaathi_worker_session', JSON.stringify(user));
       localStorage.setItem('user_mobile_number', phoneNumber);
-      localStorage.setItem('worker_application_status', 'approved');
+      localStorage.setItem('worker_application_status', isWorkerApproved ? 'approved' : 'pending');
 
       return {
         success: true,
@@ -99,23 +109,29 @@ export const authService = {
    */
   getCurrentUser(): WorkerUser | null {
     try {
-      const session = localStorage.getItem('gharsaathi_worker_session') || sessionStorage.getItem('gharsaathi_worker_session');
-      if (session) return JSON.parse(session);
-
       const workerUserJson = localStorage.getItem('gigsevak_worker_user');
       if (workerUserJson) {
         const parsed = JSON.parse(workerUserJson);
-        return {
-          name: parsed.fullName || 'Rajesh Kumar',
-          phoneNumber: parsed.mobileNumber || '',
-          isVerified: true
-        };
+        if (parsed?.fullName) {
+          return {
+            name: parsed.fullName,
+            phoneNumber: parsed.mobileNumber || '',
+            isVerified: true
+          };
+        }
+      }
+
+      const session = localStorage.getItem('gharsaathi_worker_session') || sessionStorage.getItem('gharsaathi_worker_session');
+      if (session) {
+        const parsed = JSON.parse(session);
+        if (parsed?.phoneNumber) {
+          return parsed;
+        }
       }
 
       const phone = localStorage.getItem('user_mobile_number');
       if (phone) {
         return {
-          name: 'Rajesh Kumar',
           phoneNumber: phone,
           isVerified: true
         };

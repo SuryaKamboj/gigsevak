@@ -65,28 +65,35 @@ export const WorkerVerify: React.FC = () => {
       setSuccessMessage(t('auth.otp.otpVerifiedSuccess', { lng: activeLangCode }) || 'Mobile number verified successfully.');
       onboardingService.updateState({ mobileNumber: rawPhone, isMobileCompleted: true });
 
-      // Save user session permanently in localStorage
+      let isWorkerApproved = false;
+      let resolvedWorkerName = '';
+      try {
+        const cleanDigits = rawPhone.replace(/\D/g, '').slice(-10);
+        const formattedPhone = `+91${cleanDigits}`;
+        const loginRes = await workerBackendService.loginWorker(formattedPhone);
+        if (loginRes?.user?.fullName) {
+          resolvedWorkerName = loginRes.user.fullName;
+        }
+        const profileRes = await workerBackendService.getProfile();
+        const workerDoc = profileRes?.data || profileRes;
+        if (workerDoc?.fullName) {
+          resolvedWorkerName = workerDoc.fullName;
+        }
+        isWorkerApproved = workerDoc?.kycVerificationStatus === 'VERIFIED';
+      } catch (err: any) {
+        console.warn('Backend login warning during OTP verification:', err?.message || err);
+      }
+
+      // Save user session permanently in localStorage with real worker identity
       const userSession = {
         phoneNumber: rawPhone,
-        name: 'Rajesh Kumar',
+        name: resolvedWorkerName,
         isVerified: true,
         verifiedAt: new Date().toISOString()
       };
       localStorage.setItem('gharsaathi_worker_session', JSON.stringify(userSession));
       sessionStorage.setItem('gharsaathi_worker_session', JSON.stringify(userSession));
       localStorage.setItem('user_mobile_number', rawPhone);
-
-      let isWorkerApproved = false;
-      try {
-        const formattedPhone = rawPhone.startsWith('+91') ? rawPhone : `+91${rawPhone.replace(/\D/g, '').slice(-10)}`;
-        await workerBackendService.loginWorker(formattedPhone, 'Worker Partner');
-        const profileRes = await workerBackendService.getProfile();
-        const workerDoc = profileRes?.data || profileRes;
-        isWorkerApproved = workerDoc?.kycVerificationStatus === 'VERIFIED';
-      } catch (err: any) {
-        console.warn('Backend login warning during OTP verification:', err?.message || err);
-      }
-
       localStorage.setItem('worker_application_status', isWorkerApproved ? 'approved' : 'pending');
 
       setTimeout(() => {

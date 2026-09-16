@@ -32,9 +32,7 @@ const RootRedirect = () => {
 // Route Guard: Strictly block dashboard and job access until approved by Admin
 const RequireApprovedWorker: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [isChecking, setIsChecking] = useState(true);
-  const [isApproved, setIsApproved] = useState<boolean>(() => {
-    return localStorage.getItem('worker_application_status') === 'approved';
-  });
+  const [isApproved, setIsApproved] = useState<boolean>(false);
 
   useEffect(() => {
     let isMounted = true;
@@ -50,8 +48,7 @@ const RequireApprovedWorker: React.FC<{ children: React.ReactNode }> = ({ childr
       })
       .catch(() => {
         if (isMounted) {
-          const localApproved = localStorage.getItem('worker_application_status') === 'approved';
-          setIsApproved(localApproved);
+          setIsApproved(false);
           setIsChecking(false);
         }
       });
@@ -59,12 +56,12 @@ const RequireApprovedWorker: React.FC<{ children: React.ReactNode }> = ({ childr
     return () => { isMounted = false; };
   }, []);
 
-  if (isChecking && !isApproved) {
+  if (isChecking) {
     return (
       <div className="min-h-[100dvh] flex items-center justify-center bg-slate-50">
         <div className="flex flex-col items-center gap-3">
-          <div className="w-8 h-8 border-3 border-emerald-600 border-t-transparent rounded-full animate-spin" />
-          <p className="text-xs font-semibold text-slate-600">Verifying authorization status...</p>
+          <div className="w-8 h-8 border-4 border-[#1C516C] border-t-transparent rounded-full animate-spin" />
+          <p className="text-xs text-slate-500 font-medium">Verifying authorization...</p>
         </div>
       </div>
     );

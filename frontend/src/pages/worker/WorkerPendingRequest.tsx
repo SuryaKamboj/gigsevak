@@ -42,6 +42,7 @@ export const WorkerPendingRequest: React.FC = () => {
     return saved === 'approved' ? 'approved' : saved === 'rejected' ? 'rejected' : 'pending';
   });
 
+  const [workerProfile, setWorkerProfile] = useState<any>(null);
   const [rejectionReason, setRejectionReason] = useState<string | null>(() => {
     return localStorage.getItem('worker_rejection_reason') || null;
   });
@@ -54,25 +55,28 @@ export const WorkerPendingRequest: React.FC = () => {
     try {
       const res = await workerBackendService.getProfile();
       const worker = res?.data || res;
-      if (worker?.kycVerificationStatus === 'VERIFIED') {
-        setStatus('approved');
-        setRejectionReason(null);
-        localStorage.setItem('worker_application_status', 'approved');
-        localStorage.removeItem('worker_rejection_reason');
-      } else if (worker?.kycVerificationStatus === 'REJECTED') {
-        setStatus('rejected');
-        const reason =
-          worker.rejectionReason ||
-          worker.privateData?.verificationAudit?.rejectionReason ||
-          'Application details could not be verified by the administrator. Please update and re-submit.';
-        setRejectionReason(reason);
-        localStorage.setItem('worker_application_status', 'rejected');
-        localStorage.setItem('worker_rejection_reason', reason);
-      } else {
-        setStatus('pending');
-        setRejectionReason(null);
-        localStorage.setItem('worker_application_status', 'pending');
-        localStorage.removeItem('worker_rejection_reason');
+      if (worker) {
+        setWorkerProfile(worker);
+        if (worker.kycVerificationStatus === 'VERIFIED') {
+          setStatus('approved');
+          setRejectionReason(null);
+          localStorage.setItem('worker_application_status', 'approved');
+          localStorage.removeItem('worker_rejection_reason');
+        } else if (worker.kycVerificationStatus === 'REJECTED') {
+          setStatus('rejected');
+          const reason =
+            worker.rejectionReason ||
+            worker.privateData?.verificationAudit?.rejectionReason ||
+            'Application details could not be verified by the administrator. Please update and re-submit.';
+          setRejectionReason(reason);
+          localStorage.setItem('worker_application_status', 'rejected');
+          localStorage.setItem('worker_rejection_reason', reason);
+        } else {
+          setStatus('pending');
+          setRejectionReason(null);
+          localStorage.setItem('worker_application_status', 'pending');
+          localStorage.removeItem('worker_rejection_reason');
+        }
       }
     } catch (err) {
       console.warn('Backend status check notice:', err);
@@ -83,7 +87,8 @@ export const WorkerPendingRequest: React.FC = () => {
     const saved = localStorage.getItem('user_mobile_number');
     if (saved) return saved;
     const session = authService.getCurrentUser();
-    return session?.phoneNumber ? `+91 ${session.phoneNumber}` : '+91 9876543210';
+    if (session?.phoneNumber) return session.phoneNumber.startsWith('+91') ? session.phoneNumber : `+91 ${session.phoneNumber}`;
+    return '';
   })();
 
   const selectedCategories = (() => {
@@ -107,28 +112,33 @@ export const WorkerPendingRequest: React.FC = () => {
   React.useEffect(() => {
     const syncApplicationOnMount = async () => {
       try {
-        const savedPhone = localStorage.getItem('user_mobile_number') || '+917906072410';
-        const formattedPhone = savedPhone.startsWith('+91') ? savedPhone : `+91${savedPhone.replace(/\D/g, '').slice(-10)}`;
-        if (!localStorage.getItem('gigsevak_token')) {
-          await workerBackendService.loginWorker(formattedPhone, 'Worker Partner');
+        const savedPhone = localStorage.getItem('user_mobile_number') || authService.getCurrentUser()?.phoneNumber;
+        if (savedPhone) {
+          const clean = savedPhone.replace(/\D/g, '').slice(-10);
+          const formattedPhone = `+91${clean}`;
+          if (!localStorage.getItem('gigsevak_token')) {
+            await workerBackendService.loginWorker(formattedPhone);
+          }
         }
 
         const profileRes = await workerBackendService.getProfile();
         const currentWorker = profileRes?.data || profileRes;
+        if (currentWorker) {
+          setWorkerProfile(currentWorker);
+        }
         
         // Only submit initial onboarding application if worker has no KYC status yet
         if (!currentWorker?.kycVerificationStatus) {
           const storedIdentity: any = getStoredIdentityStatus();
           const aadhaarNum = sessionStorage.getItem('gigsevak_worker_aadhaar') || storedIdentity?.maskedAadhaar || '548291038492';
           await workerBackendService.submitOnboardingApplication({
-            fullName: currentWorker?.fullName || 'Worker Partner',
             aadhaarNumber: aadhaarNum,
             aadhaarVerified: true,
             selfieUrl: storedIdentity?.selfieReference || 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=400&q=80',
             skills: selectedCategories && selectedCategories.length > 0 ? selectedCategories : ['ELECTRICAL', 'PLUMBING'],
             primaryServiceCategory: selectedCategories?.[0] || 'ELECTRICAL',
-            serviceArea: locationData?.name || 'BH6 A Block, Gurudwara Rd, Punjab 144411, India',
-            addressLine: locationData?.name || 'BH6 A Block, Gurudwara Rd, Punjab 144411, India'
+            serviceArea: locationData?.name || 'Primary Service Area',
+            addressLine: locationData?.name || 'Primary Service Area'
           });
         }
       } catch (err) {
@@ -144,7 +154,7 @@ export const WorkerPendingRequest: React.FC = () => {
 
   const selectedLangObj = LANGUAGES.find((l) => l.id === activeLangCode) || LANGUAGES[0];
 
-  const applicationId = (() => {
+  const applicationId = workerProfile?.workerCode || (() => {
     const digits = phoneNumber.replace(/\D/g, '').slice(-5) || '84920';
     return `GS-${new Date().getFullYear()}-${digits}`;
   })();
@@ -163,19 +173,6 @@ export const WorkerPendingRequest: React.FC = () => {
     setIsRefreshing(false);
     setShowRefreshToast(true);
     setTimeout(() => setShowRefreshToast(false), 3000);
-  };
-
-  const toggleApprovalForDemo = (newStatus: 'pending' | 'approved' | 'rejected') => {
-    setStatus(newStatus);
-    localStorage.setItem('worker_application_status', newStatus);
-    if (newStatus === 'rejected') {
-      const reason = 'UIDAI verification unconfirmed: Aadhaar image photo did not clearly match the live capture selfie.';
-      setRejectionReason(reason);
-      localStorage.setItem('worker_rejection_reason', reason);
-    } else if (newStatus === 'approved') {
-      setRejectionReason(null);
-      localStorage.removeItem('worker_rejection_reason');
-    }
   };
 
   const isApproved = status === 'approved';
@@ -212,7 +209,6 @@ export const WorkerPendingRequest: React.FC = () => {
   const statusUpdatedText = t('pendingRequest.statusUpdated', { lng: activeLangCode }) || 'Status is up to date';
   const needHelpText = t('pendingRequest.needHelp', { lng: activeLangCode }) || 'Need help with your application?';
   const goToWorkerDashboardText = t('pendingRequest.goToWorkerDashboard', { lng: activeLangCode }) || 'Go to Worker Dashboard';
-  const simulateApprovalText = t('pendingRequest.simulateApproval', { lng: activeLangCode }) || 'Simulate Instant Approval (Test)';
 
   const fullAudioText = `${titleText}. ${subtitleText}. ${statusText}.`;
 
@@ -309,48 +305,6 @@ export const WorkerPendingRequest: React.FC = () => {
           </div>
         )}
 
-        {/* Demo Status Switcher Pill */}
-        <div className="p-2 rounded-xl bg-slate-100/80 border border-slate-200 flex items-center justify-between text-xs">
-          <span className="text-[11px] font-semibold text-slate-600 pl-1">
-            Test Status Simulation:
-          </span>
-          <div className="flex items-center gap-1">
-            <button
-              type="button"
-              onClick={() => toggleApprovalForDemo('pending')}
-              className={`px-2.5 py-1 rounded-lg font-bold text-xs transition cursor-pointer ${
-                status === 'pending'
-                  ? 'bg-amber-500 text-white shadow-xs'
-                  : 'bg-white text-slate-600 hover:bg-slate-200'
-              }`}
-            >
-              Pending
-            </button>
-            <button
-              type="button"
-              onClick={() => toggleApprovalForDemo('approved')}
-              className={`px-2.5 py-1 rounded-lg font-bold text-xs transition cursor-pointer ${
-                status === 'approved'
-                  ? 'bg-emerald-600 text-white shadow-xs'
-                  : 'bg-white text-slate-600 hover:bg-slate-200'
-              }`}
-            >
-              Approved
-            </button>
-            <button
-              type="button"
-              onClick={() => toggleApprovalForDemo('rejected')}
-              className={`px-2.5 py-1 rounded-lg font-bold text-xs transition cursor-pointer ${
-                status === 'rejected'
-                  ? 'bg-rose-600 text-white shadow-xs'
-                  : 'bg-white text-slate-600 hover:bg-slate-200'
-              }`}
-            >
-              Rejected
-            </button>
-          </div>
-        </div>
-
         {/* Application Details Summary Card */}
         <div className="bg-[#F5F0DD]/40 border border-[#E9E2C6] rounded-2xl p-4 sm:p-5 space-y-3.5">
           <div className="flex items-center justify-between text-xs text-[#66737D] font-medium border-b border-[#E9E2C6]/80 pb-2.5">
@@ -373,7 +327,7 @@ export const WorkerPendingRequest: React.FC = () => {
             </div>
             <div className="flex-1 min-w-0">
               <p className="text-sm sm:text-base font-bold text-[#17212B] truncate">
-                {t('dashboard.verifiedWorker', { lng: activeLangCode }) || 'Worker Partner'}
+                {workerProfile?.fullName || authService.getCurrentUser()?.name || 'Worker Applicant'}
               </p>
               <div className="flex items-center gap-2 text-xs text-[#66737D]">
                 <span className="flex items-center gap-1">
@@ -634,15 +588,6 @@ export const WorkerPendingRequest: React.FC = () => {
               >
                 <RefreshCw className={`w-4 h-4 ${isRefreshing ? 'animate-spin' : ''}`} />
                 <span>{refreshStatusText}</span>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => toggleApprovalForDemo('approved')}
-                className="w-full h-11 rounded-xl text-xs sm:text-sm font-bold text-emerald-800 bg-emerald-50 border border-emerald-300 hover:bg-emerald-100 transition-colors flex items-center justify-center gap-2 cursor-pointer"
-              >
-                <Sparkles className="w-4 h-4 text-emerald-600" />
-                <span>{simulateApprovalText}</span>
               </button>
             </>
           )}

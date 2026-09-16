@@ -46,6 +46,7 @@ export interface SendOtpResult {
 
 let currentConfirmationResult: any = null;
 let lastGeneratedOtp = '123456';
+let lastRequestedPhoneNumber = '';
 
 export function setConfirmationResult(result: any) {
   currentConfirmationResult = result;
@@ -72,6 +73,8 @@ export async function sendOtpSms(phoneNumber: string): Promise<SendOtpResult> {
     throw new Error('Please enter a valid 10-digit mobile number');
   }
 
+  lastRequestedPhoneNumber = formattedNumber;
+
   // Generate OTP session without any CAPTCHA obstacles
   lastGeneratedOtp = '123456';
   const confirmationResult = {
@@ -82,7 +85,7 @@ export async function sendOtpSms(phoneNumber: string): Promise<SendOtpResult> {
         return {
           user: {
             phoneNumber: formattedNumber,
-            uid: 'worker_uid_' + digitsOnly,
+            uid: 'worker_uid_' + digitsOnly.slice(-10),
             displayName: 'GigSevak'
           }
         };
@@ -119,7 +122,9 @@ export async function verifyOtpCode(confirmationOrCode: any, maybeCode?: string)
 
   if (!confirmation || !confirmation.confirm) {
     if (code === '123456' || code === '000000' || /^\d{6}$/.test(code)) {
-      return { user: { uid: 'mock_user', phoneNumber: '+919876543210' } };
+      const phone = lastRequestedPhoneNumber || localStorage.getItem('user_mobile_number') || '';
+      const clean = phone.replace(/\D/g, '').slice(-10);
+      return { user: { uid: 'worker_uid_' + clean, phoneNumber: `+91${clean}` } };
     }
     throw new Error('Invalid or missing OTP confirmation session');
   }

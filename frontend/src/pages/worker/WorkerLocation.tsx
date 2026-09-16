@@ -446,16 +446,18 @@ export const WorkerLocation: React.FC = () => {
 
     setIsSubmitting(true);
     try {
-      const savedPhone = localStorage.getItem('user_mobile_number') || sessionUser?.phoneNumber || '+917906072410';
-      const formattedPhone = savedPhone.startsWith('+91') ? savedPhone : `+91${savedPhone.replace(/\D/g, '').slice(-10)}`;
-      const workerName = sessionUser?.fullName || sessionUser?.name || 'Worker Partner';
+      const savedPhone = localStorage.getItem('user_mobile_number') || sessionUser?.phoneNumber;
+      if (!savedPhone) {
+        throw new Error('No verified mobile number found. Please verify your phone number.');
+      }
+      const cleanDigits = savedPhone.replace(/\D/g, '').slice(-10);
+      const formattedPhone = `+91${cleanDigits}`;
 
       if (!localStorage.getItem('gigsevak_token')) {
-        await workerBackendService.loginWorker(formattedPhone, workerName);
+        await workerBackendService.loginWorker(formattedPhone);
       }
 
       await workerBackendService.submitOnboardingApplication({
-        fullName: workerName,
         aadhaarNumber,
         aadhaarVerified: true,
         selfieUrl,
@@ -464,10 +466,10 @@ export const WorkerLocation: React.FC = () => {
         location: {
           latitude: coordinates.lat,
           longitude: coordinates.lng,
-          name: selectedLocationName || 'Kapurthala Service Area'
+          name: selectedLocationName || 'Primary Service Area'
         },
-        serviceArea: selectedLocationName || 'Kapurthala Service Area',
-        addressLine: selectedLocationName || 'Service Area Address'
+        serviceArea: selectedLocationName || 'Primary Service Area',
+        addressLine: selectedLocationName || 'Primary Service Area'
       });
     } catch (err) {
       console.warn('Backend onboarding sync notice:', err);
