@@ -471,12 +471,14 @@ export const WorkerLocation: React.FC = () => {
         serviceArea: selectedLocationName || 'Primary Service Area',
         addressLine: selectedLocationName || 'Primary Service Area'
       });
-    } catch (err) {
-      console.warn('Backend onboarding sync notice:', err);
-    } finally {
-      setIsSubmitting(false);
+
       localStorage.setItem('worker_application_status', 'pending');
       navigate('/worker/pending-request');
+    } catch (err: any) {
+      console.warn('Backend onboarding sync notice:', err);
+      setErrorMessage(err?.message || 'Failed to submit application to registry. Please try again.');
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
