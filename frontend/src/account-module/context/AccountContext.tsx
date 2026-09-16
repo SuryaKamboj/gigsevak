@@ -113,6 +113,16 @@ export const AccountProvider: React.FC<AccountProviderProps> = ({
     }
   }, [worker]);
 
+  // Sync initialWorker when fetched asynchronously from backend
+  useEffect(() => {
+    if (initialWorker && Object.keys(initialWorker).length > 0) {
+      setWorker(prev => ({
+        ...prev,
+        ...initialWorker
+      }));
+    }
+  }, [initialWorker]);
+
   // Optional hash synchronization
   useEffect(() => {
     if (!syncHashRouting) return;

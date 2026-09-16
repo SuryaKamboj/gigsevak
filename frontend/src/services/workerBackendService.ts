@@ -62,6 +62,14 @@ export const workerBackendService = {
   },
 
   /**
+   * Update complete worker profile details in MongoDB
+   */
+  async updateProfile(profileData: any) {
+    const res = await api.put('/workers/me', profileData);
+    return res.data;
+  },
+
+  /**
    * Update worker status & online toggle
    */
   async updateAvailability(isOnline: boolean, availabilityStatus?: string) {
