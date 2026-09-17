@@ -12,7 +12,7 @@ import { WorkerDashboard } from './pages/worker/WorkerDashboard';
 import { WorkerPendingRequest } from './pages/worker/WorkerPendingRequest';
 import { JobDetailPage } from './pages/dashboard/JobDetailPage';
 import { authService } from './services/authService';
-import { MOCK_JOBS } from './data/mockJobs';
+import type { JobItem } from './types/dashboard';
 
 import React, { useState, useEffect } from 'react';
 import { workerBackendService } from './services/workerBackendService';
@@ -92,31 +92,76 @@ const RequireApprovedWorker: React.FC<{ children: React.ReactNode }> = ({ childr
 const JobDetailRouteWrapper = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-  const found = MOCK_JOBS.find((j) => j.id === id);
-  const fallbackJob = found || {
-    id: id || 'GS-202609-29833',
-    serviceName: 'Electrical Repair & Switchboard Wiring',
-    serviceImage: 'https://images.unsplash.com/photo-1621905251189-08b45d6a269e?auto=format&fit=crop&w=600&q=80',
-    image: 'https://images.unsplash.com/photo-1621905251189-08b45d6a269e?auto=format&fit=crop&w=600&q=80',
-    clientName: 'Rahul Verma',
-    clientImage: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=300&q=80',
-    clientAddress: 'B-42 Lajpat Nagar II, New Delhi',
-    clientPhone: '+91 63963 23790',
-    scheduledTime: 'Immediate Dispatch',
-    date: 'today',
-    status: 'accepted' as const,
-    price: '₹420',
-    duration: '45 mins',
-    estimatedDuration: 45,
-    description: 'Emergency electrical check and MCB replacement.',
-    customerPhotos: [],
-    latitude: 28.5300,
-    longitude: 77.2090,
-    isLocationReached: false,
-    locationVerified: false,
-  };
+  const [job, setJob] = useState<JobItem | null>(null);
+  const [loading, setLoading] = useState(true);
 
-  return <JobDetailPage job={fallbackJob} onBack={() => navigate('/worker/dashboard')} />;
+  useEffect(() => {
+    let isMounted = true;
+    workerBackendService
+      .getJobs()
+      .then((jobs) => {
+        if (!isMounted) return;
+        const found = jobs.find((j: any) => j._id === id || j.bookingCode === id);
+        if (found) {
+          const statusStr = (found.status || '').toLowerCase();
+          setJob({
+            id: found._id || found.bookingCode,
+            serviceName: found.serviceId?.name || 'Cooperative Service',
+            serviceImage: 'https://images.unsplash.com/photo-1621905251189-08b45d6a269e?auto=format&fit=crop&w=600&q=80',
+            image: 'https://images.unsplash.com/photo-1621905251189-08b45d6a269e?auto=format&fit=crop&w=600&q=80',
+            clientName: found.userId?.fullName || 'Citizen Customer',
+            clientImage: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=300&q=80',
+            clientAddress: found.serviceAddress?.addressLine1 ? `${found.serviceAddress.addressLine1}, ${found.serviceAddress.city || 'Delhi'}` : 'Customer Address',
+            clientPhone: found.userId?.mobileNumber || '',
+            scheduledTime: found.scheduledStartTime ? new Date(found.scheduledStartTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'Immediate Dispatch',
+            date: 'today',
+            status: ['completed'].includes(statusStr) ? 'completed' : ['in_progress', 'working'].includes(statusStr) ? 'in_progress' : ['accepted', 'in_transit', 'arrived'].includes(statusStr) ? 'accepted' : 'pending',
+            price: `₹${found.pricing?.totalAmount || 420}`,
+            duration: '45 mins',
+            estimatedDuration: 45,
+            description: (found as any).notes || 'Cooperative citizen service request',
+            customerPhotos: [],
+            latitude: 28.5300,
+            longitude: 77.2090,
+            isLocationReached: ['arrived', 'in_progress', 'completed'].includes(statusStr),
+            locationVerified: ['arrived', 'in_progress', 'completed'].includes(statusStr),
+          });
+        }
+        setLoading(false);
+      })
+      .catch(() => {
+        if (isMounted) setLoading(false);
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, [id]);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-[#F8F9FA]">
+        <div className="w-8 h-8 border-3 border-brand-primary border-t-transparent rounded-full animate-spin" />
+      </div>
+    );
+  }
+
+  if (!job) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center bg-[#F8F9FA] p-4 text-center">
+        <p className="text-base font-bold text-neutral-800">Job not found</p>
+        <p className="text-xs text-neutral-500 mt-1">This service request does not exist in the cooperative database.</p>
+        <button
+          onClick={() => navigate('/worker/dashboard')}
+          className="mt-4 px-4 py-2 bg-brand-primary text-white text-xs font-bold rounded-xl cursor-pointer"
+        >
+          Return to Dashboard
+        </button>
+      </div>
+    );
+  }
+
+  return <JobDetailPage job={job} onBack={() => navigate('/worker/dashboard')} />;
 };
 
 export default function App() {

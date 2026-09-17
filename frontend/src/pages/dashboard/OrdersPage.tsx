@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import { MOCK_JOBS } from '../../data/mockJobs';
 import { WorkCard } from '../../components/dashboard/WorkCard';
 import { JobDetailsModal } from '../../components/dashboard/JobDetailsModal';
 import { Search, CalendarCheck } from 'lucide-react';
@@ -14,7 +13,7 @@ interface OrdersPageProps {
 }
 
 export const OrdersPage: React.FC<OrdersPageProps> = ({
-  jobsList = MOCK_JOBS,
+  jobsList = [],
   onUpdateJob,
   onAcceptJob,
   onDeclineJob,

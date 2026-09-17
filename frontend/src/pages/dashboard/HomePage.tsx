@@ -1,12 +1,11 @@
 import React, { useState } from 'react';
-import { MOCK_JOBS } from '../../data/mockJobs';
 import { WorkCard } from '../../components/dashboard/WorkCard';
 import { JobDetailsModal } from '../../components/dashboard/JobDetailsModal';
 import { OtpVerificationModal } from '../../components/dashboard/OtpVerificationModal';
 import { BeforeWorkModal } from '../../components/dashboard/BeforeWorkModal';
 import { WorkSessionModal } from '../../components/dashboard/WorkSessionModal';
 import { CompleteWorkModal } from '../../components/dashboard/CompleteWorkModal';
-import { Calendar, Briefcase, CheckCircle2 } from 'lucide-react';
+import { Calendar, Briefcase, CheckCircle2, Inbox } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import type { JobItem } from '../../types/dashboard';
 import { authService } from '../../services/authService';
@@ -21,7 +20,7 @@ interface HomePageProps {
 }
 
 export const HomePage: React.FC<HomePageProps> = ({
-  jobsList = MOCK_JOBS,
+  jobsList = [],
   onUpdateJob,
   onAcceptJob,
   onDeclineJob,
@@ -279,7 +278,7 @@ export const HomePage: React.FC<HomePageProps> = ({
       )}
 
       {/* Incoming Requests Alert Section */}
-      {pendingJobs.length > 0 && (
+      {pendingJobs.length > 0 ? (
         <section className="space-y-3 bg-amber-500/10 border-2 border-amber-500/30 p-4 sm:p-5 rounded-3xl animate-in fade-in zoom-in-95 duration-200">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2.5">
@@ -327,6 +326,34 @@ export const HomePage: React.FC<HomePageProps> = ({
                 onClick={() => setSelectedJob(job)}
               />
             ))}
+          </div>
+        </section>
+      ) : (
+        <section className="space-y-3 bg-white border border-slate-200/80 p-5 rounded-3xl shadow-xs">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2.5">
+              <span className="relative flex h-3 w-3">
+                <span className="relative inline-flex rounded-full h-3 w-3 bg-slate-300"></span>
+              </span>
+              <h2 className="text-base sm:text-lg font-bold text-neutral-dark">
+                {t('dashboard.incomingRequests', 'New Incoming Service Requests')}
+              </h2>
+            </div>
+            <span className="text-xs font-semibold px-3 py-1 rounded-full bg-slate-100 text-slate-500 border border-slate-200/60">
+              0 {t('dashboard.actionRequired', 'New Request')}
+            </span>
+          </div>
+
+          <div className="py-7 flex flex-col items-center justify-center text-center">
+            <div className="w-12 h-12 rounded-2xl bg-slate-100 flex items-center justify-center text-slate-400 mb-2.5">
+              <Inbox className="w-6 h-6 stroke-[1.75]" />
+            </div>
+            <p className="text-sm font-bold text-slate-700">
+              {t('dashboard.noIncomingRequests', 'No incoming service requests')}
+            </p>
+            <p className="text-xs text-slate-500 max-w-sm mt-1">
+              {t('dashboard.waitingForJobs', 'New service requests from citizens will appear here in real time.')}
+            </p>
           </div>
         </section>
       )}

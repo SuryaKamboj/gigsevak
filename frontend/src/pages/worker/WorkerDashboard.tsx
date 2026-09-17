@@ -7,7 +7,6 @@ import { OrdersPage } from '../dashboard/OrdersPage';
 import { VoicePage } from '../dashboard/VoicePage';
 import { AccountPage } from '../dashboard/AccountPage';
 import type { JobItem, NavTab } from '../../types/dashboard';
-import { MOCK_JOBS } from '../../data/mockJobs';
 import { workerBackendService } from '../../services/workerBackendService';
 import { authService } from '../../services/authService';
 
@@ -24,23 +23,23 @@ const mapBackendJobToJobItem = (job: any): JobItem => {
 
   return {
     id: job._id || job.bookingCode,
-    serviceName: job.serviceId?.name || 'Electrical Repair',
-    serviceImage: 'https://images.unsplash.com/photo-1621905251189-08b45d6a269e?auto=format&fit=crop&w=600&q=80',
-    image: 'https://images.unsplash.com/photo-1621905251189-08b45d6a269e?auto=format&fit=crop&w=600&q=80',
-    clientName: job.userId?.fullName || 'Customer',
+    serviceName: job.serviceId?.name || (job.serviceId?.category ? `${job.serviceId.category} Service` : 'Cooperative Service'),
+    serviceImage: job.serviceId?.imageUrl || 'https://images.unsplash.com/photo-1621905251189-08b45d6a269e?auto=format&fit=crop&w=600&q=80',
+    image: job.serviceId?.imageUrl || 'https://images.unsplash.com/photo-1621905251189-08b45d6a269e?auto=format&fit=crop&w=600&q=80',
+    clientName: job.userId?.fullName || 'Citizen Customer',
     clientImage: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=300&q=80',
-    clientAddress: job.serviceAddress?.addressLine1 ? `${job.serviceAddress.addressLine1}, ${job.serviceAddress.city || 'New Delhi'}` : 'B-42 Lajpat Nagar II, New Delhi',
-    clientPhone: job.userId?.mobileNumber || '+91 63963 23790',
+    clientAddress: job.serviceAddress?.addressLine1 ? `${job.serviceAddress.addressLine1}, ${job.serviceAddress.city || 'Delhi'}` : 'Customer Location',
+    clientPhone: job.userId?.mobileNumber || '+91 98765 43210',
     scheduledTime: job.scheduledStartTime ? new Date(job.scheduledStartTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'Immediate Dispatch',
     date: 'today',
     status: finalStatus,
     price: `₹${job.pricing?.totalAmount || 420}`,
-    duration: '45 mins',
-    estimatedDuration: 45,
-    description: job.notes || 'Cooperative service request',
+    duration: job.serviceId?.defaultDurationMinutes ? `${job.serviceId.defaultDurationMinutes} mins` : '45 mins',
+    estimatedDuration: job.serviceId?.defaultDurationMinutes || 45,
+    description: job.notes || 'Cooperative citizen service request',
     customerPhotos: [],
-    latitude: 28.5300,
-    longitude: 77.2090,
+    latitude: job.serviceAddress?.location?.coordinates?.[1] || 28.5300,
+    longitude: job.serviceAddress?.location?.coordinates?.[0] || 77.2090,
     isLocationReached: ['arrived', 'in_progress', 'completed'].includes(statusStr),
     locationVerified: ['arrived', 'in_progress', 'completed'].includes(statusStr)
   };
@@ -49,14 +48,16 @@ const mapBackendJobToJobItem = (job: any): JobItem => {
 export const WorkerDashboard: React.FC = () => {
   const [activeTab, setActiveTab] = useState<NavTab>('home');
   const [isAvailable, setIsAvailable] = useState<boolean>(true);
-  const [jobsList, setJobsList] = useState<JobItem[]>(MOCK_JOBS);
+  const [jobsList, setJobsList] = useState<JobItem[]>([]);
 
   const fetchRealJobs = async () => {
     try {
       const backendJobs = await workerBackendService.getJobs();
-      if (backendJobs && backendJobs.length > 0) {
+      if (Array.isArray(backendJobs)) {
         const mapped = backendJobs.map(mapBackendJobToJobItem);
         setJobsList(mapped);
+      } else {
+        setJobsList([]);
       }
     } catch (err: any) {
       if (err?.status === 401) {
