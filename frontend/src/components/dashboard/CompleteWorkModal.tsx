@@ -26,12 +26,12 @@ export const CompleteWorkModal: React.FC<CompleteWorkModalProps> = ({
   isOpen,
   onClose,
   onConfirm,
-  mockOtp = '123456',
+  mockOtp = '1234',
 }) => {
   const { t } = useTranslation();
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
   const [photoName, setPhotoName] = useState<string>('');
-  const [otpDigits, setOtpDigits] = useState<string[]>(['', '', '', '', '', '']);
+  const [otpDigits, setOtpDigits] = useState<string[]>(['', '', '', '']);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
 
@@ -152,7 +152,7 @@ export const CompleteWorkModal: React.FC<CompleteWorkModalProps> = ({
     if (isOpen) {
       setPhotoPreview(null);
       setPhotoName('');
-      setOtpDigits(['', '', '', '', '', '']);
+      setOtpDigits(['', '', '', '']);
       setErrorMessage(null);
       setIsSubmitting(false);
       setIsLiveCameraActive(false);
@@ -224,13 +224,13 @@ export const CompleteWorkModal: React.FC<CompleteWorkModalProps> = ({
 
     if (cleaned.length > 1) {
       const newDigits = [...otpDigits];
-      for (let i = 0; i < 6 && index + i < 6; i++) {
+      for (let i = 0; i < 4 && index + i < 4; i++) {
         if (cleaned[i]) {
           newDigits[index + i] = cleaned[i];
         }
       }
       setOtpDigits(newDigits);
-      const nextIdx = Math.min(index + cleaned.length, 5);
+      const nextIdx = Math.min(index + cleaned.length, 3);
       otpInputRefs.current[nextIdx]?.focus();
       return;
     }
@@ -239,7 +239,7 @@ export const CompleteWorkModal: React.FC<CompleteWorkModalProps> = ({
     newDigits[index] = cleaned[0];
     setOtpDigits(newDigits);
 
-    if (cleaned && index < 5) {
+    if (cleaned && index < 3) {
       otpInputRefs.current[index + 1]?.focus();
     }
   };
@@ -252,7 +252,7 @@ export const CompleteWorkModal: React.FC<CompleteWorkModalProps> = ({
     } else if (e.key === 'ArrowLeft' && index > 0) {
       e.preventDefault();
       otpInputRefs.current[index - 1]?.focus();
-    } else if (e.key === 'ArrowRight' && index < 5) {
+    } else if (e.key === 'ArrowRight' && index < 3) {
       e.preventDefault();
       otpInputRefs.current[index + 1]?.focus();
     } else if (e.key === 'Enter') {
@@ -263,11 +263,11 @@ export const CompleteWorkModal: React.FC<CompleteWorkModalProps> = ({
 
   const handleOtpPaste = (e: React.ClipboardEvent<HTMLInputElement>) => {
     e.preventDefault();
-    const pastedData = e.clipboardData.getData('text').replace(/\D/g, '').slice(0, 6);
+    const pastedData = e.clipboardData.getData('text').replace(/\D/g, '').slice(0, 4);
     if (!pastedData) return;
 
-    const newDigits = ['', '', '', '', '', ''];
-    for (let i = 0; i < 6; i++) {
+    const newDigits = ['', '', '', ''];
+    for (let i = 0; i < 4; i++) {
       newDigits[i] = pastedData[i] || '';
     }
     setOtpDigits(newDigits);
@@ -275,29 +275,29 @@ export const CompleteWorkModal: React.FC<CompleteWorkModalProps> = ({
       setErrorMessage(null);
     }
 
-    const focusIdx = Math.min(pastedData.length, 5);
+    const focusIdx = Math.min(pastedData.length, 3);
     otpInputRefs.current[focusIdx]?.focus();
   };
 
   const enteredOtp = otpDigits.join('');
-  const isFormValid = Boolean(photoPreview && enteredOtp.length === 6);
+  const isFormValid = Boolean(photoPreview && enteredOtp.length === 4);
 
   const handleConfirmCompletion = () => {
     if (!photoPreview) {
-      setErrorMessage(t('dashboard.photoAndOtpRequired', 'Please provide both completion photo and 6-digit OTP.'));
+      setErrorMessage(t('dashboard.photoAndOtpRequired', 'Please provide both completion photo and 4-digit OTP.'));
       return;
     }
 
-    if (enteredOtp.length < 6) {
-      setErrorMessage(t('dashboard.enterOtp6', 'Please enter the complete 6-digit customer OTP.'));
+    if (enteredOtp.length < 4) {
+      setErrorMessage(t('dashboard.enterOtp4', 'Please enter the complete 4-digit customer OTP.'));
       return;
     }
 
     setIsSubmitting(true);
     setErrorMessage(null);
 
-    // Validate 6-digit completion OTP (mock is 123456)
-    if (enteredOtp !== mockOtp && enteredOtp !== '123456') {
+    // Validate 4-digit completion OTP
+    if (enteredOtp !== mockOtp && enteredOtp !== '1234') {
       setErrorMessage(t('dashboard.incorrectOtp', 'Incorrect OTP. Please enter the OTP provided by the customer.'));
       setIsSubmitting(false);
       return;
@@ -542,7 +542,7 @@ export const CompleteWorkModal: React.FC<CompleteWorkModalProps> = ({
           <section className="space-y-3 pt-1">
             <div>
               <h4 className="text-sm sm:text-base font-bold text-[#222222] flex items-center gap-1.5">
-                <span>{t('dashboard.customerOtp6', 'Customer OTP')}</span>
+                <span>{t('dashboard.customerOtp4', 'Customer 4-Digit OTP')}</span>
                 <span className="text-red-500 font-bold">*</span>
               </h4>
               <p className="text-xs text-[#6B6B6B] mt-0.5">
