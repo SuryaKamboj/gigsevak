@@ -7,7 +7,8 @@ interface OtpVerificationModalProps {
   isOpen: boolean;
   onClose: () => void;
   onVerifySuccess: () => void;
-  mockOtp?: string;
+  /** If provided, called with the entered OTP string for real backend verification */
+  onVerifyWithOtp?: (otp: string) => Promise<void>;
   serviceName?: string;
   clientName?: string;
 }
@@ -16,7 +17,7 @@ export const OtpVerificationModal: React.FC<OtpVerificationModalProps> = ({
   isOpen,
   onClose,
   onVerifySuccess,
-  mockOtp = '1234',
+  onVerifyWithOtp,
 }) => {
   const { t } = useTranslation();
   const [otpValue, setOtpValue] = useState<string>('');
@@ -67,7 +68,7 @@ export const OtpVerificationModal: React.FC<OtpVerificationModalProps> = ({
     }
   };
 
-  const handleVerify = () => {
+  const handleVerify = async () => {
     if (otpValue.length < 4) {
       setErrorMessage(t('dashboard.enterCompleteOtp4', 'Please enter the complete 4-digit OTP provided by the customer.'));
       return;
@@ -76,13 +77,20 @@ export const OtpVerificationModal: React.FC<OtpVerificationModalProps> = ({
     setIsVerifying(true);
     setErrorMessage(null);
 
-    // Mock verification check (accepts 1234)
-    if (otpValue === mockOtp || otpValue === '1234') {
+    try {
+      if (onVerifyWithOtp) {
+        // Real backend verification — errors are surfaced by the parent via toast
+        await onVerifyWithOtp(otpValue);
+        // Parent closes the modal on success; we just stop the spinner here
+        setIsVerifying(false);
+      } else {
+        // Fallback: direct success callback (no backend check)
+        setIsVerifying(false);
+        onVerifySuccess();
+      }
+    } catch {
       setIsVerifying(false);
-      onVerifySuccess();
-    } else {
-      setIsVerifying(false);
-      setErrorMessage(t('dashboard.incorrectOtp', 'Incorrect OTP. Please enter the OTP provided by the customer.'));
+      setErrorMessage(t('dashboard.incorrectOtp', 'Incorrect OTP. Please check with the customer and try again.'));
     }
   };
 

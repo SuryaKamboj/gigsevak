@@ -13,7 +13,9 @@ export interface JobItem {
   customerPhotos: string[];
   latitude: number;
   longitude: number;
-  status: 'pending' | 'accepted' | 'scheduled' | 'in_progress' | 'completed' | 'declined';
+  status: 'pending' | 'accepted' | 'in_transit' | 'arrived' | 'scheduled' | 'in_progress' | 'completed' | 'declined';
+  /** Raw status string from the backend — never collapsed/remapped */
+  backendStatus?: string;
   price?: string;
   duration?: string;
   estimatedDuration?: number; // In minutes, e.g. 120 = 2 hours

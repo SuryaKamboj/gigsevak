@@ -11,17 +11,25 @@ import { workerBackendService } from '../../services/workerBackendService';
 import { authService } from '../../services/authService';
 
 const mapBackendJobToJobItem = (job: any): JobItem => {
-  const statusStr = (job.status || '').toLowerCase();
-  const isCompleted = statusStr === 'completed';
-  const isInProgress = ['in_progress', 'working'].includes(statusStr);
-  const isAccepted = ['accepted', 'in_transit', 'arrived'].includes(statusStr);
-  const isDeclined = ['declined', 'cancelled'].includes(statusStr);
+  const rawStatus = (job.status || '').toUpperCase();
 
-  const finalStatus: 'pending' | 'accepted' | 'in_progress' | 'completed' | 'declined' = 
-    isCompleted ? 'completed' :
-    isInProgress ? 'in_progress' :
-    isAccepted ? 'accepted' :
-    isDeclined ? 'declined' : 'pending';
+  // Map backend status → frontend status (1-to-1, no collapsing)
+  const statusMap: Record<string, JobItem['status']> = {
+    PENDING:     'pending',
+    REQUESTED:   'pending',
+    ALLOCATED:   'pending',
+    ACCEPTED:    'accepted',
+    IN_TRANSIT:  'in_transit',
+    ARRIVED:     'arrived',
+    IN_PROGRESS: 'in_progress',
+    COMPLETED:   'completed',
+    CANCELLED:   'declined',
+    DECLINED:    'declined',
+  };
+  const finalStatus: JobItem['status'] = statusMap[rawStatus] ?? 'pending';
+
+  const isLocationReached = ['ARRIVED', 'IN_TRANSIT', 'IN_PROGRESS', 'COMPLETED'].includes(rawStatus);
+  const workStarted = ['IN_PROGRESS', 'COMPLETED'].includes(rawStatus);
 
   return {
     id: job._id || job.bookingCode || job.bookingId,
@@ -35,6 +43,7 @@ const mapBackendJobToJobItem = (job: any): JobItem => {
     scheduledTime: job.scheduledStartTime ? new Date(job.scheduledStartTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'Immediate Dispatch',
     date: 'today',
     status: finalStatus,
+    backendStatus: rawStatus,
     price: `₹${job.pricing?.totalAmount || 420}`,
     duration: job.serviceId?.defaultDurationMinutes ? `${job.serviceId.defaultDurationMinutes} mins` : '45 mins',
     estimatedDuration: job.serviceId?.defaultDurationMinutes || 45,
@@ -42,10 +51,13 @@ const mapBackendJobToJobItem = (job: any): JobItem => {
     customerPhotos: [],
     latitude: job.serviceAddress?.location?.coordinates?.[1] || 28.5300,
     longitude: job.serviceAddress?.location?.coordinates?.[0] || 77.2090,
-    isLocationReached: ['arrived', 'in_progress', 'completed'].includes(statusStr),
-    locationVerified: ['arrived', 'in_progress', 'completed'].includes(statusStr)
+    isLocationReached,
+    locationVerified: isLocationReached,
+    workStarted,
+    workCompleted: rawStatus === 'COMPLETED',
   };
 };
+
 
 export const WorkerDashboard: React.FC = () => {
   const [activeTab, setActiveTab] = useState<NavTab>('home');
@@ -150,6 +162,7 @@ export const WorkerDashboard: React.FC = () => {
             onUpdateJob={handleUpdateJob}
             onAcceptJob={handleAcceptJob}
             onDeclineJob={handleDeclineJob}
+            onRefresh={fetchRealJobs}
           />
         );
       case 'orders':

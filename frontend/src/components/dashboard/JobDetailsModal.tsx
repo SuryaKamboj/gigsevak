@@ -544,7 +544,6 @@ export const JobDetailsModal: React.FC<JobDetailsModalProps> = ({
         isOpen={showOtpModal}
         onClose={() => setShowOtpModal(false)}
         onVerifySuccess={handleOtpSuccess}
-        mockOtp="1234"
         serviceName={job.serviceName}
         clientName={job.clientName}
       />
@@ -573,7 +572,6 @@ export const JobDetailsModal: React.FC<JobDetailsModalProps> = ({
         isOpen={showCompleteModal}
         onClose={() => setShowCompleteModal(false)}
         onConfirm={handleCompleteConfirm}
-        mockOtp="123456"
         serviceName={job.serviceName}
         clientName={job.clientName}
       />
