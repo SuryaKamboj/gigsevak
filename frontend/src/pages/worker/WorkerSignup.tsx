@@ -57,7 +57,7 @@ export const WorkerSignup: React.FC = () => {
     try {
       const cleanPhone = phoneNumber.replace(/\D/g, '');
       const formattedNumber = `+91${cleanPhone}`;
-      const response = await sendOtpSms(formattedNumber);
+      await sendOtpSms(formattedNumber);
 
       localStorage.setItem('user_mobile_number', formattedNumber);
       onboardingService.updateState({ mobileNumber: formattedNumber, isMobileCompleted: true });
@@ -65,9 +65,7 @@ export const WorkerSignup: React.FC = () => {
       navigate('/worker/verify', {
         state: {
           phoneNumber: formattedNumber,
-          mode: 'signup',
-          isSimulated: response.isSimulated,
-          simulatedOtp: response.simulatedOtp
+          mode: 'signup'
         },
       });
     } catch (err: any) {

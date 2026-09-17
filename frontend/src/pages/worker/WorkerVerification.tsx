@@ -476,25 +476,14 @@ export const WorkerVerification: React.FC = () => {
                   </div>
                 )}
 
-                <div className="pt-1 flex gap-2">
-                  <div className="flex-1">
-                    <AuthButton
-                      type="submit"
-                      variant="outline"
-                      isLoading={isVerifyingAadhaar}
-                    >
-                      {aadhaarSubmitOtpBtn}
-                    </AuthButton>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setAadhaarOtp('123456');
-                    }}
-                    className="px-3 text-xs font-semibold text-[#1C516C] bg-[#F5F0DD] rounded-xl hover:bg-[#ebdca6]"
+                <div className="pt-1">
+                  <AuthButton
+                    type="submit"
+                    variant="outline"
+                    isLoading={isVerifyingAadhaar}
                   >
-                    Use 123456
-                  </button>
+                    {aadhaarSubmitOtpBtn}
+                  </AuthButton>
                 </div>
               </form>
             )}

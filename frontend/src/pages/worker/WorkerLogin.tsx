@@ -56,16 +56,14 @@ export const WorkerLogin: React.FC = () => {
     try {
       const cleanPhone = phoneNumber.replace(/\D/g, '');
       const formattedNumber = `+91${cleanPhone}`;
-      const response = await sendOtpSms(formattedNumber);
+      await sendOtpSms(formattedNumber);
 
       localStorage.setItem('user_mobile_number', formattedNumber);
 
       navigate('/worker/verify', {
         state: {
           phoneNumber: formattedNumber,
-          mode: 'login',
-          isSimulated: response.isSimulated,
-          simulatedOtp: response.simulatedOtp
+          mode: 'login'
         },
       });
     } catch (err: any) {

@@ -7,6 +7,7 @@
  */
 
 import { onboardingService } from './onboardingService';
+import { sendOtpSms, verifyOtpCode } from './firebaseAuth';
 
 export interface WorkerUser {
   name?: string;
@@ -14,12 +15,9 @@ export interface WorkerUser {
   isVerified: boolean;
 }
 
-export const MOCK_OTP = '123456';
-
 export interface SendOtpResponse {
   success: boolean;
   message: string;
-  mockOtpHint?: string;
 }
 
 export interface VerifyOtpResponse {
@@ -30,45 +28,46 @@ export interface VerifyOtpResponse {
 
 export const authService = {
   /**
-   * Request OTP for mobile number (signup or login)
+   * Request OTP for mobile number (signup or login) via Firebase
    */
   async requestOtp(phoneNumber: string, _name?: string): Promise<SendOtpResponse> {
-    // Simulate brief network latency for realistic UX feel
-    await new Promise((resolve) => setTimeout(resolve, 300));
-
-    // Basic format check
-    const cleanPhone = phoneNumber.replace(/\D/g, '');
-    if (cleanPhone.length !== 10) {
+    const cleanDigits = phoneNumber.replace(/\D/g, '').slice(-10);
+    if (cleanDigits.length !== 10) {
       return {
         success: false,
         message: 'Enter a valid 10-digit mobile number',
       };
     }
 
-    return {
-      success: true,
-      message: `OTP sent to +91 ${cleanPhone}`,
-      mockOtpHint: MOCK_OTP,
-    };
+    try {
+      const res = await sendOtpSms(`+91${cleanDigits}`);
+      return {
+        success: true,
+        message: `OTP sent to ${res.formattedNumber}`,
+      };
+    } catch (err: any) {
+      return {
+        success: false,
+        message: err?.message || 'Failed to send OTP via SMS.',
+      };
+    }
   },
 
   /**
-   * Verify entered 6-digit OTP
+   * Verify entered 6-digit OTP via Firebase ConfirmationResult
    */
   async verifyOtp(phoneNumber: string, otp: string, name?: string): Promise<VerifyOtpResponse> {
-    // Simulate brief network latency
-    await new Promise((resolve) => setTimeout(resolve, 400));
-
-    if (otp === MOCK_OTP) {
+    try {
+      const result = await verifyOtpCode(otp);
       let resolvedName = name || '';
       let isWorkerApproved = false;
 
-      // Authenticate with shared GigSevak backend to acquire JWT
+      // Authenticate with shared GigSevak backend using the verified Firebase ID Token
       try {
         const { workerBackendService } = await import('./workerBackendService');
         const cleanDigits = phoneNumber.replace(/\D/g, '').slice(-10);
         const formattedPhone = `+91${cleanDigits}`;
-        const loginRes = await workerBackendService.loginWorker(formattedPhone, name);
+        const loginRes = await workerBackendService.loginWorker(formattedPhone, name, result.idToken);
         if (loginRes?.user?.fullName) {
           resolvedName = loginRes.user.fullName;
         }
@@ -80,7 +79,7 @@ export const authService = {
       }
 
       const user: WorkerUser = {
-        phoneNumber,
+        phoneNumber: result.phoneNumber || phoneNumber,
         name: resolvedName,
         isVerified: true,
       };
@@ -88,7 +87,7 @@ export const authService = {
       // Store in both localStorage and sessionStorage for persistence
       localStorage.setItem('gharsaathi_worker_session', JSON.stringify(user));
       sessionStorage.setItem('gharsaathi_worker_session', JSON.stringify(user));
-      localStorage.setItem('user_mobile_number', phoneNumber);
+      localStorage.setItem('user_mobile_number', user.phoneNumber);
       localStorage.setItem('worker_application_status', isWorkerApproved ? 'approved' : 'pending');
 
       return {
@@ -96,12 +95,12 @@ export const authService = {
         message: 'Phone number verified successfully',
         user,
       };
+    } catch (err: any) {
+      return {
+        success: false,
+        message: err?.message || 'Incorrect OTP. Please try again.',
+      };
     }
-
-    return {
-      success: false,
-      message: 'Incorrect OTP. Please try again.',
-    };
   },
 
   /**

@@ -14,8 +14,6 @@ import { workerBackendService } from '../../services/workerBackendService';
 interface LocationState {
   phoneNumber?: string;
   mode?: 'signup' | 'login';
-  isSimulated?: boolean;
-  simulatedOtp?: string;
 }
 
 export const WorkerVerify: React.FC = () => {
@@ -80,7 +78,8 @@ export const WorkerVerify: React.FC = () => {
     setResendNotification(undefined);
 
     try {
-      await verifyOtpCode(otp);
+      const verifyResult = await verifyOtpCode(otp);
+      const firebaseIdToken = verifyResult?.idToken;
 
       setSuccessMessage(t('auth.otp.otpVerifiedSuccess', { lng: activeLangCode }) || 'Mobile number verified successfully.');
       onboardingService.updateState({ mobileNumber: rawPhone, isMobileCompleted: true });
@@ -90,7 +89,7 @@ export const WorkerVerify: React.FC = () => {
       try {
         const cleanDigits = rawPhone.replace(/\D/g, '').slice(-10);
         const formattedPhone = `+91${cleanDigits}`;
-        const loginRes = await workerBackendService.loginWorker(formattedPhone);
+        const loginRes = await workerBackendService.loginWorker(formattedPhone, undefined, firebaseIdToken);
         if (loginRes?.user?.fullName) {
           resolvedWorkerName = loginRes.user.fullName;
         }
@@ -259,11 +258,10 @@ export const WorkerVerify: React.FC = () => {
               type="button"
               onClick={handleResend}
               disabled={isLoading || resendCooldown > 0}
-              className={`text-sm font-semibold p-0.5 transition-colors rounded focus:outline-none focus:ring-1 focus:ring-[#1C516C] ${
-                resendCooldown > 0 || isLoading
+              className={`text-sm font-semibold p-0.5 transition-colors rounded focus:outline-none focus:ring-1 focus:ring-[#1C516C] ${resendCooldown > 0 || isLoading
                   ? 'text-slate-400 cursor-not-allowed'
                   : 'text-[#1C516C] hover:underline underline-offset-4 cursor-pointer'
-              }`}
+                }`}
             >
               {resendCooldown > 0
                 ? t('auth.otp.resendIn', { seconds: resendCooldown, lng: activeLangCode }) || `Resend in ${resendCooldown}s`
