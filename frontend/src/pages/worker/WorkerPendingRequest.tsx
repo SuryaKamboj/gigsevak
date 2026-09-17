@@ -600,16 +600,16 @@ export const WorkerPendingRequest: React.FC = () => {
         </div>
 
         {/* Action Buttons */}
-        <div className="space-y-2.5 pt-2 border-t border-slate-100">
+        <div className="pt-6 pb-4 sm:pt-8 sm:pb-6 border-t border-slate-100 flex flex-col justify-center space-y-3.5">
           {isApproved ? (
             <button
               type="button"
               onClick={() => navigate('/worker/dashboard')}
-              className="w-full h-13 rounded-xl text-sm sm:text-base font-bold text-white bg-[#01471f] hover:bg-[#013819] active:scale-[0.99] transition-all flex items-center justify-center gap-2 cursor-pointer shadow-lg shadow-emerald-900/15"
+              className="w-full min-h-[64px] sm:min-h-[72px] py-4.5 px-6 rounded-full text-base sm:text-xl font-bold text-white bg-[#01471f] hover:bg-[#013819] active:scale-[0.99] transition-all flex items-center justify-center gap-3 cursor-pointer shadow-lg shadow-emerald-900/20"
             >
-              <LayoutDashboard className="w-5 h-5" />
+              <LayoutDashboard className="w-6 h-6" />
               <span>{goToWorkerDashboardText}</span>
-              <ArrowRight className="w-4 h-4 stroke-[2.5]" />
+              <ArrowRight className="w-5 h-5 stroke-[2.5]" />
             </button>
           ) : isRejected ? (
             <>
@@ -621,9 +621,9 @@ export const WorkerPendingRequest: React.FC = () => {
                   localStorage.removeItem('worker_rejection_reason');
                   navigate('/worker/verification');
                 }}
-                className="w-full h-13 rounded-xl text-xs sm:text-sm font-bold text-white bg-[#12355B] hover:bg-[#0B223B] active:scale-[0.99] transition-all flex items-center justify-center gap-2 cursor-pointer shadow-md shadow-[#12355B]/15"
+                className="w-full min-h-[58px] py-4 px-5 rounded-full sm:rounded-2xl text-sm sm:text-base font-bold text-white bg-[#12355B] hover:bg-[#0B223B] active:scale-[0.99] transition-all flex items-center justify-center gap-2 cursor-pointer shadow-md shadow-[#12355B]/15"
               >
-                <RotateCcw className="w-4 h-4" />
+                <RotateCcw className="w-5 h-5" />
                 <span>Update Details & Re-apply</span>
                 <ArrowRight className="w-4 h-4 stroke-[2]" />
               </button>
@@ -632,7 +632,7 @@ export const WorkerPendingRequest: React.FC = () => {
                 type="button"
                 onClick={handleRefresh}
                 disabled={isRefreshing}
-                className="w-full h-11 rounded-xl text-xs sm:text-sm font-semibold text-[#1C516C] bg-slate-100 hover:bg-slate-200 transition-colors flex items-center justify-center gap-2 cursor-pointer disabled:opacity-75"
+                className="w-full min-h-[52px] py-3.5 px-5 rounded-full sm:rounded-2xl text-xs sm:text-sm font-semibold text-[#1C516C] bg-slate-100 hover:bg-slate-200 transition-colors flex items-center justify-center gap-2 cursor-pointer disabled:opacity-75"
               >
                 <RefreshCw className={`w-4 h-4 ${isRefreshing ? 'animate-spin' : ''}`} />
                 <span>{refreshStatusText}</span>
@@ -644,7 +644,7 @@ export const WorkerPendingRequest: React.FC = () => {
                 type="button"
                 onClick={handleRefresh}
                 disabled={isRefreshing}
-                className="w-full h-12 rounded-xl text-xs sm:text-sm font-bold text-white bg-[#1C516C] hover:bg-[#133B50] active:scale-[0.99] transition-all flex items-center justify-center gap-2 cursor-pointer shadow-md shadow-[#1C516C]/10 disabled:opacity-75"
+                className="w-full min-h-[58px] py-4 px-5 rounded-full sm:rounded-2xl text-sm sm:text-base font-bold text-white bg-[#1C516C] hover:bg-[#133B50] active:scale-[0.99] transition-all flex items-center justify-center gap-2 cursor-pointer shadow-md shadow-[#1C516C]/10 disabled:opacity-75"
               >
                 <RefreshCw className={`w-4 h-4 ${isRefreshing ? 'animate-spin' : ''}`} />
                 <span>{refreshStatusText}</span>
