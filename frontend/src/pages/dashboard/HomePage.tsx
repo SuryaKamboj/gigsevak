@@ -400,6 +400,27 @@ export const HomePage: React.FC<HomePageProps> = ({
           job={selectedJob}
           onClose={() => setSelectedJob(null)}
           onUpdateJob={handleUpdate}
+          showBookingActions={selectedJob.status === 'pending'}
+          onAccept={async (j) => {
+            if (onAcceptJob) {
+              await onAcceptJob(j);
+            } else {
+              handleUpdate({ ...j, status: 'accepted', date: 'today' });
+            }
+            setSelectedJob(null);
+            setNotification(`✓ Accepted "${j.serviceName}"!`);
+            setTimeout(() => setNotification(null), 3000);
+          }}
+          onDecline={async (j) => {
+            if (onDeclineJob) {
+              await onDeclineJob(j);
+            } else {
+              handleUpdate({ ...j, status: 'declined' });
+            }
+            setSelectedJob(null);
+            setNotification(`Declined "${j.serviceName}"`);
+            setTimeout(() => setNotification(null), 3000);
+          }}
         />
       )}
 

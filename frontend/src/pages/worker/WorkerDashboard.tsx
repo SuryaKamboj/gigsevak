@@ -15,14 +15,16 @@ const mapBackendJobToJobItem = (job: any): JobItem => {
   const isCompleted = statusStr === 'completed';
   const isInProgress = ['in_progress', 'working'].includes(statusStr);
   const isAccepted = ['accepted', 'in_transit', 'arrived'].includes(statusStr);
+  const isDeclined = ['declined', 'cancelled'].includes(statusStr);
 
   const finalStatus: 'pending' | 'accepted' | 'in_progress' | 'completed' | 'declined' = 
     isCompleted ? 'completed' :
     isInProgress ? 'in_progress' :
-    isAccepted ? 'accepted' : 'pending';
+    isAccepted ? 'accepted' :
+    isDeclined ? 'declined' : 'pending';
 
   return {
-    id: job._id || job.bookingCode,
+    id: job._id || job.bookingCode || job.bookingId,
     serviceName: job.serviceId?.name || (job.serviceId?.category ? `${job.serviceId.category} Service` : 'Cooperative Service'),
     serviceImage: job.serviceId?.imageUrl || 'https://images.unsplash.com/photo-1621905251189-08b45d6a269e?auto=format&fit=crop&w=600&q=80',
     image: job.serviceId?.imageUrl || 'https://images.unsplash.com/photo-1621905251189-08b45d6a269e?auto=format&fit=crop&w=600&q=80',
