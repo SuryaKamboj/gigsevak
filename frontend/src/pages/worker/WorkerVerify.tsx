@@ -32,11 +32,26 @@ export const WorkerVerify: React.FC = () => {
   const lastFourDigits = rawPhone.replace(/\D/g, '').slice(-4) || '••••';
   const maskedPhone = rawPhone ? `+91 ••••••${lastFourDigits}` : '';
 
+  const OTP_VALIDITY_SECONDS = 120; // 2 minutes OTP validity
+  const RESEND_COOLDOWN_SECONDS = 30; // 30 seconds resend cooldown
+
   const [otp, setOtp] = useState('');
   const [error, setError] = useState<string | undefined>();
   const [resendNotification, setResendNotification] = useState<string | undefined>();
   const [successMessage, setSuccessMessage] = useState<string | undefined>();
   const [isLoading, setIsLoading] = useState(false);
+  const [validitySeconds, setValiditySeconds] = useState(OTP_VALIDITY_SECONDS);
+  const [resendCooldown, setResendCooldown] = useState(RESEND_COOLDOWN_SECONDS);
+
+  // Active countdown timer effect
+  React.useEffect(() => {
+    const timer = setInterval(() => {
+      setValiditySeconds((prev) => (prev > 0 ? prev - 1 : 0));
+      setResendCooldown((prev) => (prev > 0 ? prev - 1 : 0));
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, []);
 
   const headingText = t('auth.otp.title', { lng: activeLangCode }) || 'Verify your mobile number';
   const enterOtpText = t('auth.otp.description', { lng: activeLangCode }) || 'Enter the 6-digit OTP sent to your mobile number';
@@ -49,6 +64,11 @@ export const WorkerVerify: React.FC = () => {
   const handleVerify = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
     if (isLoading || successMessage) return;
+
+    if (validitySeconds <= 0) {
+      setError(t('auth.otp.expiredOtp', { lng: activeLangCode }) || 'OTP has expired. Please click "Resend OTP" to receive a new code.');
+      return;
+    }
 
     if (otp.length < 6) {
       setError(t('auth.otp.invalidOtp', { lng: activeLangCode }) || 'Please enter the 6-digit OTP');
@@ -111,12 +131,17 @@ export const WorkerVerify: React.FC = () => {
   };
 
   const handleResend = async () => {
+    if (resendCooldown > 0 || isLoading) return;
+
     setOtp('');
     setError(undefined);
     setIsLoading(true);
 
     try {
       await sendOtpSms(rawPhone);
+      setValiditySeconds(OTP_VALIDITY_SECONDS);
+      setResendCooldown(RESEND_COOLDOWN_SECONDS);
+
       setResendNotification(t('auth.otp.otpResentSuccess', { lng: activeLangCode }) || 'OTP sent again successfully');
 
       setTimeout(() => {
@@ -182,11 +207,11 @@ export const WorkerVerify: React.FC = () => {
                 if (resendNotification) setResendNotification(undefined);
               }}
               hasError={Boolean(error)}
-              disabled={isLoading || Boolean(successMessage)}
+              disabled={isLoading || Boolean(successMessage) || validitySeconds <= 0}
             />
 
             {/* OTP Validity Timer */}
-            <OTPTimer timeString="02:00" />
+            <OTPTimer secondsLeft={validitySeconds} />
 
             {/* Error Message */}
             {error && (
@@ -216,7 +241,7 @@ export const WorkerVerify: React.FC = () => {
             <AuthButton
               type="submit"
               variant="outline"
-              disabled={isLoading || Boolean(successMessage) || otp.length < 6}
+              disabled={isLoading || Boolean(successMessage) || otp.length < 6 || validitySeconds <= 0}
               isLoading={isLoading}
             >
               {verifyOtpText}
@@ -233,10 +258,16 @@ export const WorkerVerify: React.FC = () => {
             <button
               type="button"
               onClick={handleResend}
-              disabled={isLoading}
-              className="text-sm font-semibold text-[#1C516C] hover:underline underline-offset-4 focus:outline-none focus:ring-1 focus:ring-[#1C516C] rounded p-0.5 transition-colors disabled:opacity-50 cursor-pointer"
+              disabled={isLoading || resendCooldown > 0}
+              className={`text-sm font-semibold p-0.5 transition-colors rounded focus:outline-none focus:ring-1 focus:ring-[#1C516C] ${
+                resendCooldown > 0 || isLoading
+                  ? 'text-slate-400 cursor-not-allowed'
+                  : 'text-[#1C516C] hover:underline underline-offset-4 cursor-pointer'
+              }`}
             >
-              {resendOtpText}
+              {resendCooldown > 0
+                ? t('auth.otp.resendIn', { seconds: resendCooldown, lng: activeLangCode }) || `Resend in ${resendCooldown}s`
+                : resendOtpText}
             </button>
           </div>
         </div>
