@@ -52,6 +52,9 @@ export const WorkerPendingRequest: React.FC = () => {
 
   // Check backend approval status in real-time
   const checkBackendStatus = React.useCallback(async () => {
+    if (!authService.isAuthenticated()) {
+      return;
+    }
     try {
       const res = await workerBackendService.getProfile();
       const worker = res?.data || res;
@@ -78,8 +81,11 @@ export const WorkerPendingRequest: React.FC = () => {
           localStorage.removeItem('worker_rejection_reason');
         }
       }
-    } catch (err) {
-      console.warn('Backend status check notice:', err);
+    } catch (err: any) {
+      if (err?.status === 401) {
+        throw err;
+      }
+      console.warn('Backend status check notice:', err?.message || err);
     }
   }, []);
 
@@ -110,6 +116,14 @@ export const WorkerPendingRequest: React.FC = () => {
   })();
 
   React.useEffect(() => {
+    let isMounted = true;
+    let intervalId: any = null;
+
+    if (!authService.isAuthenticated()) {
+      navigate('/worker/login', { replace: true });
+      return;
+    }
+
     const syncApplicationOnMount = async () => {
       try {
         const savedPhone = localStorage.getItem('user_mobile_number') || authService.getCurrentUser()?.phoneNumber;
@@ -123,8 +137,18 @@ export const WorkerPendingRequest: React.FC = () => {
 
         const profileRes = await workerBackendService.getProfile();
         const currentWorker = profileRes?.data || profileRes;
-        if (currentWorker) {
+        if (currentWorker && isMounted) {
           setWorkerProfile(currentWorker);
+          if (currentWorker.kycVerificationStatus === 'VERIFIED') {
+            setStatus('approved');
+            setRejectionReason(null);
+            localStorage.setItem('worker_application_status', 'approved');
+          } else if (currentWorker.kycVerificationStatus === 'REJECTED') {
+            setStatus('rejected');
+            const reason = currentWorker.rejectionReason || currentWorker.privateData?.verificationAudit?.rejectionReason || 'Application details could not be verified.';
+            setRejectionReason(reason);
+            localStorage.setItem('worker_application_status', 'rejected');
+          }
         }
         
         // Only submit initial onboarding application if worker has no KYC status yet
@@ -141,16 +165,52 @@ export const WorkerPendingRequest: React.FC = () => {
             addressLine: locationData?.name || 'Primary Service Area'
           });
         }
-      } catch (err) {
-        console.warn('Sync application on mount notice:', err);
+      } catch (err: any) {
+        if (err?.status === 401) {
+          if (isMounted) {
+            authService.logout();
+            navigate('/worker/login', { replace: true });
+          }
+          return;
+        }
+        console.warn('Sync application on mount notice:', err?.message || err);
       }
-      checkBackendStatus();
+      if (isMounted) {
+        try {
+          await checkBackendStatus();
+        } catch {
+          // Handled inside
+        }
+      }
     };
 
     syncApplicationOnMount();
-    const interval = setInterval(checkBackendStatus, 3000);
-    return () => clearInterval(interval);
-  }, [checkBackendStatus, selectedCategories, locationData]);
+
+    intervalId = setInterval(async () => {
+      if (!isMounted) return;
+      if (!authService.isAuthenticated()) {
+        clearInterval(intervalId);
+        navigate('/worker/login', { replace: true });
+        return;
+      }
+      try {
+        await checkBackendStatus();
+      } catch (err: any) {
+        if (err?.status === 401) {
+          clearInterval(intervalId);
+          if (isMounted) {
+            authService.logout();
+            navigate('/worker/login', { replace: true });
+          }
+        }
+      }
+    }, 6000);
+
+    return () => {
+      isMounted = false;
+      if (intervalId) clearInterval(intervalId);
+    };
+  }, [checkBackendStatus, selectedCategories, locationData, navigate]);
 
   const selectedLangObj = LANGUAGES.find((l) => l.id === activeLangCode) || LANGUAGES[0];
 

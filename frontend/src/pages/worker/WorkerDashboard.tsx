@@ -9,6 +9,7 @@ import { AccountPage } from '../dashboard/AccountPage';
 import type { JobItem, NavTab } from '../../types/dashboard';
 import { MOCK_JOBS } from '../../data/mockJobs';
 import { workerBackendService } from '../../services/workerBackendService';
+import { authService } from '../../services/authService';
 
 const mapBackendJobToJobItem = (job: any): JobItem => {
   const statusStr = (job.status || '').toLowerCase();
@@ -58,11 +59,17 @@ export const WorkerDashboard: React.FC = () => {
         setJobsList(mapped);
       }
     } catch (err: any) {
+      if (err?.status === 401) {
+        throw err;
+      }
       console.warn('[WorkerDashboard] getJobs notice:', err?.message || err);
     }
   };
 
   React.useEffect(() => {
+    let isMounted = true;
+    let interval: any = null;
+
     // Verify worker approval status on mount
     workerBackendService.getProfile()
       .then((res: any) => {
@@ -72,11 +79,31 @@ export const WorkerDashboard: React.FC = () => {
           window.location.href = '/worker/pending-request';
         }
       })
-      .catch(() => {});
+      .catch((err: any) => {
+        if (err?.status === 401) {
+          authService.logout();
+          window.location.href = '/worker/login';
+        }
+      });
 
-    fetchRealJobs();
-    const interval = setInterval(fetchRealJobs, 3000);
-    return () => clearInterval(interval);
+    fetchRealJobs().catch(() => {});
+    interval = setInterval(async () => {
+      if (!isMounted) return;
+      try {
+        await fetchRealJobs();
+      } catch (err: any) {
+        if (err?.status === 401) {
+          clearInterval(interval);
+          authService.logout();
+          window.location.href = '/worker/login';
+        }
+      }
+    }, 5000);
+
+    return () => {
+      isMounted = false;
+      if (interval) clearInterval(interval);
+    };
   }, []);
 
   const handleUpdateJob = (updatedJob: JobItem) => {

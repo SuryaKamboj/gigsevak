@@ -33,9 +33,16 @@ const RootRedirect = () => {
 const RequireApprovedWorker: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [isChecking, setIsChecking] = useState(true);
   const [isApproved, setIsApproved] = useState<boolean>(false);
+  const [isAuth, setIsAuth] = useState<boolean>(true);
 
   useEffect(() => {
     let isMounted = true;
+    if (!authService.isAuthenticated()) {
+      setIsAuth(false);
+      setIsChecking(false);
+      return;
+    }
+
     workerBackendService.getProfile()
       .then((res: any) => {
         const worker = res?.data || res;
@@ -46,8 +53,11 @@ const RequireApprovedWorker: React.FC<{ children: React.ReactNode }> = ({ childr
           setIsChecking(false);
         }
       })
-      .catch(() => {
+      .catch((err: any) => {
         if (isMounted) {
+          if (err?.status === 401) {
+            setIsAuth(false);
+          }
           setIsApproved(false);
           setIsChecking(false);
         }
@@ -65,6 +75,10 @@ const RequireApprovedWorker: React.FC<{ children: React.ReactNode }> = ({ childr
         </div>
       </div>
     );
+  }
+
+  if (!isAuth) {
+    return <Navigate to="/worker/login" replace />;
   }
 
   if (!isApproved) {

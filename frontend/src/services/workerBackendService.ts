@@ -43,14 +43,18 @@ export const workerBackendService = {
       firebaseIdToken
     });
 
-    if (res?.data?.accessToken) {
-      localStorage.setItem('gigsevak_token', res.data.accessToken);
-      sessionStorage.setItem('gigsevak_token', res.data.accessToken);
-      if (res.data.user) {
-        localStorage.setItem('gigsevak_worker_user', JSON.stringify(res.data.user));
+    const token = res?.data?.accessToken || res?.accessToken;
+    const user = res?.data?.user || res?.user;
+
+    if (token) {
+      localStorage.setItem('gigsevak_token', token);
+      sessionStorage.setItem('gigsevak_token', token);
+      if (user) {
+        localStorage.setItem('gigsevak_worker_user', JSON.stringify(user));
       }
+      localStorage.setItem('user_mobile_number', mobileNumber);
     }
-    return res.data;
+    return res?.data || res;
   },
 
   /**

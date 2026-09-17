@@ -58,6 +58,8 @@ export const WorkerLogin: React.FC = () => {
       const formattedNumber = `+91${cleanPhone}`;
       const response = await sendOtpSms(formattedNumber);
 
+      localStorage.setItem('user_mobile_number', formattedNumber);
+
       navigate('/worker/verify', {
         state: {
           phoneNumber: formattedNumber,

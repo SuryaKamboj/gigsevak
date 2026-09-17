@@ -150,9 +150,9 @@ export const authService = {
     try {
       const token = localStorage.getItem('gigsevak_token') || sessionStorage.getItem('gigsevak_token');
       const session = localStorage.getItem('gharsaathi_worker_session') || sessionStorage.getItem('gharsaathi_worker_session');
-      const status = localStorage.getItem('worker_application_status');
       const phone = localStorage.getItem('user_mobile_number');
-      return Boolean(token || session || status === 'approved' || phone);
+      const workerUser = localStorage.getItem('gigsevak_worker_user');
+      return Boolean(token || phone || session || workerUser);
     } catch {
       return false;
     }
