@@ -16,7 +16,7 @@ import { useTranslation } from 'react-i18next';
 interface CompleteWorkModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onConfirm: (proofPhotoUrl: string) => void;
+  onConfirm: (proofPhotoUrl: string, pin: string) => Promise<void> | void;
   serviceName?: string;
   clientName?: string;
   mockOtp?: string;
@@ -26,7 +26,6 @@ export const CompleteWorkModal: React.FC<CompleteWorkModalProps> = ({
   isOpen,
   onClose,
   onConfirm,
-  mockOtp = '1234',
 }) => {
   const { t } = useTranslation();
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
@@ -280,14 +279,9 @@ export const CompleteWorkModal: React.FC<CompleteWorkModalProps> = ({
   };
 
   const enteredOtp = otpDigits.join('');
-  const isFormValid = Boolean(photoPreview && enteredOtp.length === 4);
+  const isFormValid = Boolean(enteredOtp.length === 4);
 
-  const handleConfirmCompletion = () => {
-    if (!photoPreview) {
-      setErrorMessage(t('dashboard.photoAndOtpRequired', 'Please provide both completion photo and 4-digit OTP.'));
-      return;
-    }
-
+  const handleConfirmCompletion = async () => {
     if (enteredOtp.length < 4) {
       setErrorMessage(t('dashboard.enterOtp4', 'Please enter the complete 4-digit customer OTP.'));
       return;
@@ -296,16 +290,15 @@ export const CompleteWorkModal: React.FC<CompleteWorkModalProps> = ({
     setIsSubmitting(true);
     setErrorMessage(null);
 
-    // Validate 4-digit completion OTP
-    if (enteredOtp !== mockOtp && enteredOtp !== '1234') {
-      setErrorMessage(t('dashboard.incorrectOtp', 'Incorrect OTP. Please enter the OTP provided by the customer.'));
+    try {
+      const photoToSubmit = photoPreview || 'https://images.unsplash.com/photo-1581578731548-c64695cc6952?auto=format&fit=crop&w=600&q=80';
+      await onConfirm(photoToSubmit, enteredOtp);
+    } catch (err: any) {
+      const msg = err?.response?.data?.error?.message || err?.message || 'Verification failed. Please check the PIN.';
+      setErrorMessage(msg);
+    } finally {
       setIsSubmitting(false);
-      return;
     }
-
-    // OTP and Photo are valid
-    setIsSubmitting(false);
-    onConfirm(photoPreview);
   };
 
   const modalContent = (

@@ -176,10 +176,19 @@ export const workerBackendService = {
   },
 
   /**
-   * Finish job
+   * Worker clicks "Complete Job" → backend generates PIN, sets COMPLETION_PENDING
    */
   async completeJob(bookingId: string) {
     const res = await api.post(`/bookings/${bookingId}/complete`);
+    return res.data;
+  },
+
+  /**
+   * Worker submits the 4-digit PIN they received verbally from the customer.
+   * Backend verifies against stored HMAC hash → sets COMPLETED in MongoDB.
+   */
+  async verifyCompletionPin(bookingId: string, pin: string) {
+    const res = await api.post(`/bookings/${bookingId}/verify-completion`, { pin });
     return res.data;
   }
 };

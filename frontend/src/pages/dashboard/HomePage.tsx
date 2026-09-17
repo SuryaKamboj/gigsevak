@@ -1,4 +1,4 @@
-﻿import React, { useState } from 'react';
+import React, { useState } from 'react';
 import { WorkCard } from '../../components/dashboard/WorkCard';
 import { JobDetailsModal } from '../../components/dashboard/JobDetailsModal';
 import { OtpVerificationModal } from '../../components/dashboard/OtpVerificationModal';
@@ -136,12 +136,38 @@ export const HomePage: React.FC<HomePageProps> = ({
     setActiveSessionJob(updated);
   };
 
-  const handleCompleteWorkSuccess = async (proofPhoto: string) => {
+  const handleInitiateCompleteJob = async (job: JobItem) => {
+    setLoadingJobId(job.id);
+    try {
+      const res = await workerBackendService.completeJob(job.id);
+      if (res?.success === false) {
+        showToast(`Warning: ${res?.error?.message || 'Could not complete job'}`);
+        return;
+      }
+      const updated: JobItem = {
+        ...job,
+        status: 'completion_pending',
+        backendStatus: 'COMPLETION_PENDING',
+      };
+      handleUpdate(updated);
+      setCompleteWorkJob(updated);
+      showToast('Completion PIN generated. Ask customer for their 4-digit PIN.');
+      onRefresh?.();
+    } catch (err: any) {
+      showToast(`Warning: ${err?.response?.data?.error?.message || err?.message || 'Could not complete job'}`);
+    } finally {
+      setLoadingJobId(null);
+    }
+  };
+
+  const handleCompleteWorkSuccess = async (proofPhoto: string, enteredPin: string) => {
     if (!completeWorkJob) return;
     setLoadingJobId(completeWorkJob.id);
     try {
-      const res = await workerBackendService.completeJob(completeWorkJob.id);
-      if (res?.success === false) { showToast(`Warning: ${res?.error?.message || 'Could not complete job'}`); return; }
+      const res = await workerBackendService.verifyCompletionPin(completeWorkJob.id, enteredPin);
+      if (res?.success === false) {
+        throw new Error(res?.error?.message || 'Incorrect PIN');
+      }
       const completionTime = Date.now();
       const startMs = completeWorkJob.workStartTime || completionTime;
       const totalSecs = Math.max(0, Math.floor((completionTime - startMs) / 1000));
@@ -157,8 +183,6 @@ export const HomePage: React.FC<HomePageProps> = ({
       setCompleteWorkJob(null);
       setActiveSessionJob(null);
       onRefresh?.();
-    } catch (err: any) {
-      showToast(`Warning: ${err?.response?.data?.error?.message || err?.message || 'Could not complete job'}`);
     } finally {
       setLoadingJobId(null);
     }
@@ -171,7 +195,7 @@ export const HomePage: React.FC<HomePageProps> = ({
 
   const pendingJobs = localJobs.filter(j => j.status === 'pending');
   const activeJobs = localJobs.filter(j =>
-    ['accepted', 'in_transit', 'arrived', 'in_progress', 'completed'].includes(j.status) && (j.date === 'today' || !j.date)
+    ['accepted', 'in_transit', 'arrived', 'in_progress', 'completion_pending', 'completed'].includes(j.status) && (j.date === 'today' || !j.date)
   );
   const completedCount = activeJobs.filter(j => j.status === 'completed').length;
   const inProgressCount = activeJobs.filter(j => j.status === 'in_progress').length;
@@ -184,10 +208,11 @@ export const HomePage: React.FC<HomePageProps> = ({
 
   const getJobAction = (job: JobItem) => {
     switch (job.status) {
-      case 'accepted':    return { label: 'On the Way',         fn: () => handleMarkOnTheWay(job),   cls: 'bg-blue-600 hover:bg-blue-700' };
-      case 'in_transit':  return { label: 'Mark Arrived',        fn: () => handleMarkArrived(job),    cls: 'bg-amber-500 hover:bg-amber-600' };
-      case 'arrived':     return { label: 'Enter Customer OTP',  fn: () => setOtpJob(job),            cls: 'bg-indigo-600 hover:bg-indigo-700' };
-      case 'in_progress': return { label: 'Complete Job',        fn: () => setCompleteWorkJob(job),   cls: 'bg-emerald-600 hover:bg-emerald-700' };
+      case 'accepted':           return { label: 'On the Way',         fn: () => handleMarkOnTheWay(job),        cls: 'bg-blue-600 hover:bg-blue-700' };
+      case 'in_transit':         return { label: 'Mark Arrived',        fn: () => handleMarkArrived(job),         cls: 'bg-amber-500 hover:bg-amber-600' };
+      case 'arrived':            return { label: 'Enter Customer OTP',  fn: () => setOtpJob(job),                 cls: 'bg-indigo-600 hover:bg-indigo-700' };
+      case 'in_progress':        return { label: 'Job Completed',       fn: () => handleInitiateCompleteJob(job), cls: 'bg-emerald-600 hover:bg-emerald-700' };
+      case 'completion_pending': return { label: 'Enter Customer PIN',  fn: () => setCompleteWorkJob(job),        cls: 'bg-emerald-600 hover:bg-emerald-700' };
       default: return null;
     }
   };
@@ -327,7 +352,17 @@ export const HomePage: React.FC<HomePageProps> = ({
 
       <WorkSessionModal isOpen={!!activeSessionJob} job={activeSessionJob}
         onClose={() => setActiveSessionJob(null)}
-        onCompleteClick={() => { if (activeSessionJob) setCompleteWorkJob(activeSessionJob); }} />
+        onCompleteClick={() => {
+          if (activeSessionJob) {
+            const j = activeSessionJob;
+            setActiveSessionJob(null);
+            if (j.status === 'completion_pending') {
+              setCompleteWorkJob(j);
+            } else {
+              handleInitiateCompleteJob(j);
+            }
+          }
+        }} />
 
       <CompleteWorkModal isOpen={!!completeWorkJob} onClose={() => setCompleteWorkJob(null)}
         onConfirm={handleCompleteWorkSuccess}

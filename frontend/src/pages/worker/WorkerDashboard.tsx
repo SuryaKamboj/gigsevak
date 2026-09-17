@@ -15,21 +15,22 @@ const mapBackendJobToJobItem = (job: any): JobItem => {
 
   // Map backend status → frontend status (1-to-1, no collapsing)
   const statusMap: Record<string, JobItem['status']> = {
-    PENDING:     'pending',
-    REQUESTED:   'pending',
-    ALLOCATED:   'pending',
-    ACCEPTED:    'accepted',
-    IN_TRANSIT:  'in_transit',
-    ARRIVED:     'arrived',
-    IN_PROGRESS: 'in_progress',
-    COMPLETED:   'completed',
-    CANCELLED:   'declined',
-    DECLINED:    'declined',
+    PENDING:            'pending',
+    REQUESTED:          'pending',
+    ALLOCATED:          'pending',
+    ACCEPTED:           'accepted',
+    IN_TRANSIT:         'in_transit',
+    ARRIVED:            'arrived',
+    IN_PROGRESS:        'in_progress',
+    COMPLETION_PENDING: 'completion_pending',
+    COMPLETED:          'completed',
+    CANCELLED:          'declined',
+    DECLINED:           'declined',
   };
   const finalStatus: JobItem['status'] = statusMap[rawStatus] ?? 'pending';
 
-  const isLocationReached = ['ARRIVED', 'IN_TRANSIT', 'IN_PROGRESS', 'COMPLETED'].includes(rawStatus);
-  const workStarted = ['IN_PROGRESS', 'COMPLETED'].includes(rawStatus);
+  const isLocationReached = ['ARRIVED', 'IN_TRANSIT', 'IN_PROGRESS', 'COMPLETION_PENDING', 'COMPLETED'].includes(rawStatus);
+  const workStarted = ['IN_PROGRESS', 'COMPLETION_PENDING', 'COMPLETED'].includes(rawStatus);
 
   return {
     id: job._id || job.bookingCode || job.bookingId,

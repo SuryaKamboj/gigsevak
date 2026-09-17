@@ -13,7 +13,7 @@ export interface JobItem {
   customerPhotos: string[];
   latitude: number;
   longitude: number;
-  status: 'pending' | 'accepted' | 'in_transit' | 'arrived' | 'scheduled' | 'in_progress' | 'completed' | 'declined';
+  status: 'pending' | 'accepted' | 'in_transit' | 'arrived' | 'scheduled' | 'in_progress' | 'completion_pending' | 'completed' | 'declined';
   /** Raw status string from the backend — never collapsed/remapped */
   backendStatus?: string;
   price?: string;

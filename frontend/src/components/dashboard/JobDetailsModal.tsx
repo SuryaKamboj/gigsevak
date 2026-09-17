@@ -99,7 +99,7 @@ export const JobDetailsModal: React.FC<JobDetailsModalProps> = ({
     setShowWorkSessionModal(true);
   };
 
-  const handleCompleteConfirm = (proofPhoto: string) => {
+  const handleCompleteConfirm = (proofPhoto: string, _pin?: string) => {
     const completionTime = Date.now();
     const startMs = job.workStartTime || (completionTime - (job.estimatedDuration || 120) * 60 * 1000);
     const totalMinutes = Math.max(1, Math.round((completionTime - startMs) / (1000 * 60)));
