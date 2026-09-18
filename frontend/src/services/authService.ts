@@ -7,7 +7,8 @@
  */
 
 import { onboardingService } from './onboardingService';
-import { sendOtpSms, verifyOtpCode } from './firebaseAuth';
+// DEMO AUTH: Firebase Phone Auth replaced with demo OTP service (VITE_DEMO_OTP_AUTH=true)
+import { sendOtpSms, verifyOtpCode } from './demoOtpAuth';
 
 export interface WorkerUser {
   name?: string;

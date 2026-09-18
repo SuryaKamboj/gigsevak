@@ -5,7 +5,8 @@ import { AuthLayout } from '../../components/auth/AuthLayout';
 import { PhoneInput } from '../../components/auth/PhoneInput';
 import { AuthButton } from '../../components/auth/AuthButton';
 import { SpeakerButton } from '../../components/common/SpeakerButton';
-import { sendOtpSms } from '../../services/firebaseAuth';
+// DEMO AUTH: Firebase Phone Auth replaced with demo OTP service (VITE_DEMO_OTP_AUTH=true)
+import { sendOtpSms } from '../../services/demoOtpAuth';
 import { authService } from '../../services/authService';
 
 export const WorkerLogin: React.FC = () => {

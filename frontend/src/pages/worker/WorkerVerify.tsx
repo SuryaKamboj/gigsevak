@@ -7,7 +7,8 @@ import { OTPInput } from '../../components/auth/OTPInput';
 import { OTPTimer } from '../../components/auth/OTPTimer';
 import { AuthButton } from '../../components/auth/AuthButton';
 import { SpeakerButton } from '../../components/common/SpeakerButton';
-import { verifyOtpCode, sendOtpSms } from '../../services/firebaseAuth';
+// DEMO AUTH: Firebase Phone Auth replaced with demo OTP service (VITE_DEMO_OTP_AUTH=true)
+import { verifyOtpCode, sendOtpSms } from '../../services/demoOtpAuth';
 import { onboardingService } from '../../services/onboardingService';
 import { workerBackendService } from '../../services/workerBackendService';
 
@@ -78,8 +79,9 @@ export const WorkerVerify: React.FC = () => {
     setResendNotification(undefined);
 
     try {
+      // DEMO AUTH: verifyOtpCode checks VITE_DEMO_OTP_AUTH=true and accepts only '123456'
       const verifyResult = await verifyOtpCode(otp);
-      const firebaseIdToken = verifyResult?.idToken;
+      // Note: verifyResult.idToken is '' in demo mode — no Firebase token
 
       setSuccessMessage(t('auth.otp.otpVerifiedSuccess', { lng: activeLangCode }) || 'Mobile number verified successfully.');
       onboardingService.updateState({ mobileNumber: rawPhone, isMobileCompleted: true });
@@ -89,7 +91,8 @@ export const WorkerVerify: React.FC = () => {
       try {
         const cleanDigits = rawPhone.replace(/\D/g, '').slice(-10);
         const formattedPhone = `+91${cleanDigits}`;
-        const loginRes = await workerBackendService.loginWorker(formattedPhone, undefined, firebaseIdToken);
+        // Pass undefined as idToken — backend accepts demo auth without Firebase token
+        const loginRes = await workerBackendService.loginWorker(formattedPhone, undefined, undefined);
         if (loginRes?.user?.fullName) {
           resolvedWorkerName = loginRes.user.fullName;
         }
@@ -102,6 +105,7 @@ export const WorkerVerify: React.FC = () => {
       } catch (err: any) {
         console.warn('Backend login warning during OTP verification:', err?.message || err);
       }
+      void verifyResult; // suppress unused-variable lint warning
 
       // Save user session permanently in localStorage with real worker identity
       const userSession = {
