@@ -1,154 +1,88 @@
 /**
- * ============================================================
- * DEMO OTP AUTHENTICATION SERVICE — GigSevak Worker Platform
- * ============================================================
+ * OTP Authentication Service — GigSevak Worker Platform
  *
- * ⚠️  THIS IS NOT REAL AUTHENTICATION ⚠️
+ * Simple skeleton OTP flow for demo/development.
+ * No third-party auth provider is used.
  *
- * This module replaces Firebase Phone Auth with a fixed demo OTP
- * for DEVELOPMENT / DEMO purposes only.
- *
- * The accepted OTP is hardcoded as: 123456
- *
- * This bypass is ONLY active when the environment flag
- *   VITE_DEMO_OTP_AUTH=true
- * is set. When that flag is absent or false, verifyOtpCode()
- * will throw an error and the bypass cannot be used.
- *
- * DO NOT deploy with VITE_DEMO_OTP_AUTH=true in production.
- * ============================================================
+ * Accepted OTP: 123456 (fixed, for demo purposes only)
  */
 
-// ---------------------------------------------------------------------------
-// Internal state: last phone number that "sent" an OTP in this session
-// ---------------------------------------------------------------------------
+// Last phone number that requested an OTP in this session
 let _pendingPhone: string | null = null;
 
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
 
-/**
- * Normalise an Indian mobile number to +91XXXXXXXXXX.
- * Accepts raw 10-digit strings or numbers already prefixed with +91 / 91.
- * Throws a user-friendly Error if the number is invalid.
- */
 function normaliseIndianPhone(phoneNumber: string): string {
   const digitsOnly = phoneNumber.replace(/\D/g, '').slice(-10);
-  if (digitsOnly.length !== 10) {
-    throw new Error('Please enter a valid 10-digit Indian mobile number');
-  }
-  if (!/^[6-9]/.test(digitsOnly)) {
+  if (digitsOnly.length !== 10 || !/^[6-9]/.test(digitsOnly)) {
     throw new Error('Please enter a valid 10-digit Indian mobile number');
   }
   return `+91${digitsOnly}`;
 }
 
 // ---------------------------------------------------------------------------
-// Public types (mirror firebaseAuth.ts shapes so callers need no changes)
+// Public types
 // ---------------------------------------------------------------------------
 
 export interface SendOtpResult {
-  /** Always a placeholder in demo mode — no real confirmationResult exists */
   confirmationResult: null;
   formattedNumber: string;
 }
 
 export interface VerifyOtpResult {
-  /** Placeholder user — no real Firebase User object */
   user: null;
-  /**
-   * Empty string — no Firebase ID token is generated.
-   * The backend loginWorker() call is still made; pass undefined/'' as the token.
-   */
   idToken: '';
   phoneNumber: string;
 }
 
 // ---------------------------------------------------------------------------
-// sendOtpSms — DEMO implementation
+// sendOtpSms
 // ---------------------------------------------------------------------------
 
 /**
- * DEMO: Simulates sending an OTP SMS without actually sending one.
- *
- * - Validates the phone number format.
- * - Stores the normalised number for later verification.
- * - Does NOT send any SMS or make any network call.
- *
- * @param phoneNumber  Raw phone string (10 digits or +91XXXXXXXXXX)
- * @returns            Resolved SendOtpResult with the formatted number
+ * Simulates sending an OTP.
+ * No SMS is sent — this is a demo skeleton only.
  */
 export async function sendOtpSms(phoneNumber: string): Promise<SendOtpResult> {
   const formattedNumber = normaliseIndianPhone(phoneNumber);
-
-  // Store for session so verifyOtpCode can confirm the same session
   _pendingPhone = formattedNumber;
 
-  // Tiny artificial delay so loading spinners behave naturally in the UI
+  // Small delay so UI loading states feel natural
   await new Promise((resolve) => setTimeout(resolve, 400));
 
-  return {
-    confirmationResult: null,
-    formattedNumber,
-  };
+  return { confirmationResult: null, formattedNumber };
 }
 
 // ---------------------------------------------------------------------------
-// verifyOtpCode — DEMO implementation
+// verifyOtpCode
 // ---------------------------------------------------------------------------
 
 /**
- * DEMO: Verifies the entered OTP code against the fixed demo OTP.
- *
- * Accepted OTP: 123456  (ONLY when VITE_DEMO_OTP_AUTH=true)
- *
- * ⚠️  This function MUST NOT succeed unless VITE_DEMO_OTP_AUTH === 'true'.
- *     This ensures the bypass cannot remain silently active in production builds.
- *
- * @param code  6-digit OTP string entered by the worker
- * @returns     Resolved VerifyOtpResult on success
- * @throws      Error with a user-friendly message on failure
+ * Verifies the OTP entered by the worker.
+ * Accepted OTP: 123456 (demo skeleton — NOT real authentication)
  */
 export async function verifyOtpCode(code: string): Promise<VerifyOtpResult> {
-  // ── Safety gate: demo mode must be explicitly enabled ──────────────────
-  const isDemoAuth = import.meta.env.VITE_DEMO_OTP_AUTH === 'true';
-  if (!isDemoAuth) {
-    throw new Error(
-      'OTP verification is not configured. Please contact support.'
-    );
-  }
-
-  // ── Basic format validation ─────────────────────────────────────────────
   const cleanCode = (code || '').trim();
+
   if (cleanCode.length !== 6 || !/^\d{6}$/.test(cleanCode)) {
-    throw new Error('Please enter a valid 6-digit OTP code.');
+    throw new Error('Please enter a valid 6-digit OTP.');
   }
 
-  // ── Session guard: must have called sendOtpSms first ───────────────────
   if (!_pendingPhone) {
-    throw new Error(
-      'No active OTP session found. Please click "Resend OTP" to request a new code.'
-    );
+    throw new Error('No active OTP session. Please click "Resend OTP".');
   }
 
-  // Tiny artificial delay so loading spinners behave naturally in the UI
   await new Promise((resolve) => setTimeout(resolve, 400));
 
-  // ── DEMO OTP check ──────────────────────────────────────────────────────
-  // IMPORTANT: 123456 is a fixed demo OTP and is NOT secure authentication.
-  const DEMO_OTP = '123456';
-  if (cleanCode !== DEMO_OTP) {
-    throw new Error('Invalid OTP. Please enter the demo OTP: 123456');
+  // Demo OTP — 123456 is the only accepted code
+  if (cleanCode !== '123456') {
+    throw new Error('Invalid OTP. Please try again.');
   }
 
   const phoneNumber = _pendingPhone;
-  // Clear session after successful verification
   _pendingPhone = null;
 
-  return {
-    user: null,
-    idToken: '',   // No Firebase token in demo mode
-    phoneNumber,
-  };
+  return { user: null, idToken: '', phoneNumber };
 }

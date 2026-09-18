@@ -35,12 +35,11 @@ export const workerBackendService = {
   /**
    * Authenticate worker and store JWT token
    */
-  async loginWorker(mobileNumber: string, fullName = 'Worker', firebaseIdToken?: string) {
+  async loginWorker(mobileNumber: string, fullName = 'Worker') {
     const res = await api.post('/auth/verify-otp', {
       mobileNumber,
       role: 'WORKER',
-      fullName,
-      firebaseIdToken
+      fullName
     });
 
     const token = res?.data?.accessToken || res?.accessToken;

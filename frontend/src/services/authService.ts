@@ -1,13 +1,11 @@
 /**
- * Mock Authentication Service for GharSaathi Worker Platform
- * 
- * Note: This is frontend-only for prototyping.
- * To integrate with real backend API in the future, replace the mock implementations
- * with actual HTTP fetch / axios calls to your authentication endpoints.
+ * Authentication Service — GigSevak Worker Platform
+ *
+ * Simple skeleton OTP auth. No third-party provider.
+ * OTP is fixed at 123456 for demo/development.
  */
 
 import { onboardingService } from './onboardingService';
-// DEMO AUTH: Firebase Phone Auth replaced with demo OTP service (VITE_DEMO_OTP_AUTH=true)
 import { sendOtpSms, verifyOtpCode } from './demoOtpAuth';
 
 export interface WorkerUser {
@@ -29,7 +27,7 @@ export interface VerifyOtpResponse {
 
 export const authService = {
   /**
-   * Request OTP for mobile number (signup or login) via Firebase
+   * Request OTP for a mobile number (demo skeleton — no SMS sent)
    */
   async requestOtp(phoneNumber: string, _name?: string): Promise<SendOtpResponse> {
     const cleanDigits = phoneNumber.replace(/\D/g, '').slice(-10);
@@ -55,7 +53,7 @@ export const authService = {
   },
 
   /**
-   * Verify entered 6-digit OTP via Firebase ConfirmationResult
+   * Verify entered 6-digit OTP (demo skeleton — accepts 123456)
    */
   async verifyOtp(phoneNumber: string, otp: string, name?: string): Promise<VerifyOtpResponse> {
     try {
@@ -63,12 +61,12 @@ export const authService = {
       let resolvedName = name || '';
       let isWorkerApproved = false;
 
-      // Authenticate with shared GigSevak backend using the verified Firebase ID Token
+      // Sync with backend using phone number
       try {
         const { workerBackendService } = await import('./workerBackendService');
         const cleanDigits = phoneNumber.replace(/\D/g, '').slice(-10);
         const formattedPhone = `+91${cleanDigits}`;
-        const loginRes = await workerBackendService.loginWorker(formattedPhone, name, result.idToken);
+        const loginRes = await workerBackendService.loginWorker(formattedPhone, name);
         if (loginRes?.user?.fullName) {
           resolvedName = loginRes.user.fullName;
         }
