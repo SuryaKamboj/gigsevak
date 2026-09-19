@@ -218,14 +218,14 @@ export const COMPLETED_JOBS: CompletedJob[] = [
     customerReview: "Great service! Very careful with electricity safety and neatly finished.",
     beforeWorkPhotos: [
       {
-        url: "https://images.unsplash.com/photo-1558494949-ef010cbdcc31?w=500&auto=format&fit=crop&q=80",
+        url: "/uploads/proof-of-work/before-switchboard-overhaul.png",
         title: "Burnt Switch Board",
         desc: "Carbonization on backplate"
       }
     ],
     afterWorkPhotos: [
       {
-        url: "https://images.unsplash.com/photo-1513506003901-1e6a229e2d15?w=500&auto=format&fit=crop&q=80",
+        url: "/uploads/proof-of-work/after-switchboard-overhaul.png",
         title: "New Modular Plate",
         desc: "Tested with voltage multimeter"
       }
